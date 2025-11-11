@@ -4,3 +4,4 @@ pytest
 pytest-cov
 playwright
 httpx
+psycopg2-binary
