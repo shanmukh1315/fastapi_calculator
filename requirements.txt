@@ -5,3 +5,6 @@ pytest-cov
 playwright
 httpx
 psycopg2-binary
+sqlalchemy
+passlib
+pydantic[email]

@@ -1,14 +1,26 @@
 from fastapi import FastAPI, HTTPException
 from app.operations import add, subtract, multiply, divide
 from app.logger_config import configure_logger
+from app.users import router as users_router
+from app.db import Base, engine
 
 logger = configure_logger()
 
 app = FastAPI(
     title="FastAPI Calculator",
-    version="0.1.0",
-    description="Simple calculator API built for Module 8",
+    version="0.2.0",
+    description="Simple calculator API with secure user model for Module 10",
 )
+
+
+@app.on_event("startup")
+def on_startup():
+    """
+    Create database tables on application startup.
+    This will be tested directly to get full coverage.
+    """
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created")
 
 
 @app.get("/")
@@ -47,3 +59,7 @@ def divide_route(a: float, b: float):
     except ValueError as exc:
         logger.error(f"DIVIDE error: {exc}")
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+# 🔐 Secure user endpoints
+app.include_router(users_router, prefix="/api", tags=["users"])

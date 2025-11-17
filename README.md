@@ -1,184 +1,221 @@
-# FastAPI Calculator – Module 8 & 9 (Docker + PostgreSQL + pgAdmin)
+# FastAPI Calculator – Modules 8, 9 & 10
 
-A fully containerized **FastAPI Calculator Web Application** integrated with **PostgreSQL** and **pgAdmin**, built as part of **FA25-IS601101 Modules 8 & 9**.  
-The project demonstrates both API-driven and raw SQL database operations using Docker Compose.
+A fully containerized **FastAPI Calculator Web Application** integrated with **PostgreSQL** and **pgAdmin**, extended in **Module 10** with a **secure user model**, **Pydantic validation**, **password hashing**, **database tests**, and a full **CI/CD pipeline** that builds and pushes a Docker image to Docker Hub.
+
+> Course: **FA25-IS601101 – Web Systems Development**
 
 ---
 
-## Overview
+## Features
 
-This project showcases:
-- Creating and consuming REST APIs with **FastAPI**
-- Writing and testing Python code using **pytest**
-- Containerizing FastAPI, PostgreSQL, and pgAdmin using **Docker Compose**
-- Executing **raw SQL queries** (CREATE, INSERT, SELECT, UPDATE, DELETE) via **pgAdmin**
-- Managing one-to-many database relationships (Users ↔ Calculations)
-- Achieving full reproducibility through version control and GitHub Actions CI
+### Calculator API (Modules 8 & 9)
+
+- REST endpoints built with **FastAPI**:
+  - `GET /add?a=&b=`
+  - `GET /subtract?a=&b=`
+  - `GET /multiply?a=&b=`
+  - `GET /divide?a=&b=`
+- Centralized logging via `logger_config.py`
+- Containerized with **Docker** and orchestrated with **Docker Compose**
+- **PostgreSQL** database + **pgAdmin 4** UI
+- Raw SQL in pgAdmin:
+  - `CREATE TABLE`, `INSERT`, `SELECT`, `UPDATE`, `DELETE`
+  - One-to-many relationship: **Users ↔ Calculations**
+
+### Secure User Model & Validation (Module 10)
+
+- **SQLAlchemy `User` model** (`app/models.py`)
+  - `id` (PK)
+  - `username` – unique
+  - `email` – unique
+  - `password_hash`
+  - `created_at` – timestamp defaulting to current time
+- **Pydantic Schemas** (`app/schemas.py`)
+  - `UserCreate` – `username`, `email`, `password`
+  - `UserRead` – `id`, `username`, `email`, `created_at` (no password exposed)
+  - Email validation using `EmailStr`
+- **Secure password hashing** (`app/security.py`)
+  - Hashing with `passlib` (`pbkdf2_sha256`)
+  - `hash_password(plain_password)`
+  - `verify_password(plain_password, hashed_password)`
+- **User API router** (`app/users.py`)
+  - `POST /api/users` – create user
+  - Validates:
+    - Unique `username`
+    - Unique `email`
+  - Stores only `password_hash` in the database
+  - Returns `UserRead` schema (no raw password)
+
+### Testing & CI/CD (Module 10)
+
+- **Unit tests**
+  - `tests/unit/test_operations.py` – calculator operations
+  - `tests/unit/test_schemas.py` – Pydantic validation (valid + invalid data)
+  - `tests/unit/test_security.py` – hash/verify password
+  - `tests/unit/test_db.py` – DB connection / engine
+  - `tests/unit/test_startup.py` – FastAPI startup behaviour
+- **Integration tests**
+  - `tests/integration/test_api_endpoints.py` – calculator API endpoints
+  - `tests/integration/test_user_db.py` – user uniqueness at DB level
+  - `tests/integration/test_users_api.py` – `/api/users` behaviour:
+    - successful creation
+    - duplicate username
+    - duplicate email
+- **E2E test**
+  - `tests/e2e/test_playwright.py` – basic browser test (smoke)
+- **Database for tests**
+  - Local default: SQLite (`sqlite:///./test.db`)
+  - CI: uses `TEST_DATABASE_URL` env var (PostgreSQL service in GitHub Actions)
+- **GitHub Actions CI**
+  - Runs on every `push` / `pull_request`
+  - Steps:
+    - Check out repo
+    - Set up Python
+    - Install dependencies
+    - Run all unit, integration, and E2E tests
+    - Build and push Docker image to Docker Hub (on successful tests)
+- **Docker Hub deployment**
+  - Image: `shanmukha1315/fastapi_calculator:latest`
+  - Link: https://hub.docker.com/r/shanmukha1315/fastapi_calculator
 
 ---
 
 ## Architecture
 
-| Service | Description |
-|----------|-------------|
-| **FastAPI App** | Hosts the calculator API endpoints (`/add`, `/subtract`, `/multiply`, `/divide`) |
-| **PostgreSQL** | Stores user and calculation data |
-| **pgAdmin 4** | Web interface for managing and querying the PostgreSQL database |
-| **Docker Compose** | Orchestrates all three containers into one environment |
+| Service            | Description                                                                |
+| ------------------ | -------------------------------------------------------------------------- |
+| **FastAPI App**    | Hosts calculator + user API endpoints                                      |
+| **PostgreSQL**     | Stores users and (optionally) calculation data                             |
+| **pgAdmin 4**      | Web interface to manage and query PostgreSQL                               |
+| **Docker Compose** | Orchestrates app, database, and pgAdmin containers                         |
+| **GitHub Actions** | Runs tests, builds Docker image, pushes to Docker Hub on successful builds |
 
 ---
 
-##  Project Structure
-```
+## Project Structure
+
+```text
 fastapi_calculator/
 │
 ├── app/
 │   ├── __init__.py
-│   ├── main.py
-│   ├── operations.py
-│   └── db.py
+│   ├── main.py           # FastAPI app, routes registration, startup
+│   ├── operations.py     # Calculator logic
+│   ├── db.py             # SQLAlchemy engine, SessionLocal, Base
+│   ├── models.py         # SQLAlchemy models (User)
+│   ├── schemas.py        # Pydantic models (UserCreate, UserRead)
+│   ├── security.py       # Password hashing / verification
+│   ├── users.py          # /api/users router
+│   └── logger_config.py  # Logging configuration
 │
 ├── tests/
+│   ├── conftest.py       # Test DB + TestClient fixtures
 │   ├── unit/
+│   │   ├── test_db.py
+│   │   ├── test_operations.py
+│   │   ├── test_schemas.py
+│   │   ├── test_security.py
+│   │   └── test_startup.py
 │   ├── integration/
+│   │   ├── test_api_endpoints.py
+│   │   ├── test_user_db.py
+│   │   └── test_users_api.py
 │   └── e2e/
+│       └── test_playwright.py
 │
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
+├── .github/workflows/ci.yml
 ├── .gitignore
 └── README.md
 
-```
 
-## Setup
+Local Development Setup (without Docker)
 
 Requires Python 3.9+.
 
-```bash
+# Create and activate virtual environment
 python3 -m venv .venv
-source .venv/bin/activate               # Windows: .venv\Scripts\activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+# Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
-```
-**Setup & Run with Docker Compose**
 
-### Build and Run Containers
-```bash
+Run the FastAPI app:
+
+uvicorn app.main:app --reload
+
+Open:
+
+Swagger UI: http://localhost:8000/docs
+
+Root endpoint: http://localhost:8000/
+
+
+Running with Docker Compose
+
+Build and start all services:
+
 docker compose up --build
-```
-```
- ✔ fastapi_calculator-web  Built                                             0.0s 
- ✔ Container postgres_db   Running                                           0.0s 
- ✔ Container fastapi_app   Recreated                                         0.4s 
- ✔ Container pgadmin       Running                                           0.0s 
-Attaching to fastapi_app, pgadmin, postgres_db
-fastapi_app  | INFO:     Will watch for changes in these directories: ['/app']
-fastapi_app  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-fastapi_app  | INFO:     Started reloader process [1] using StatReload
-fastapi_app  | INFO:     Started server process [8]
-fastapi_app  | INFO:     Waiting for application startup.
-fastapi_app  | INFO:     Application startup complete.
-```
-**Access the Services**
-```
-Service                    	URL                          	Notes
-FastAPI App	        http://localhost:8000/docs	   Interactive Swagger UI
-pgAdmin 4	          http://localhost:5050	         Default login: admin@admin.com/ admin
-PostgreSQL	        Host: db Port: 5432	           User: postgres Password: postgres
-```
-## SQL Operations in pgAdmin
-## (A) Create Tables
-```
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-```
-CREATE TABLE calculations (
-    id SERIAL PRIMARY KEY,
-    operation VARCHAR(20) NOT NULL,
-    operand_a FLOAT NOT NULL,
-    operand_b FLOAT NOT NULL,
-    result FLOAT NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    user_id INTEGER NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-```
-## (B) Insert Records
-```
-INSERT INTO users (username, email) 
-VALUES 
-('alice', 'alice@example.com'), 
-('bob', 'bob@example.com');
 
-INSERT INTO calculations (operation, operand_a, operand_b, result, user_id)
-VALUES
-('add', 2, 3, 5, 1),
-('divide', 10, 2, 5, 1),
-('multiply', 4, 5, 20, 2);
-```
-## (C) Query Data
-```
-SELECT * FROM users;
-SELECT * FROM calculations;
-SELECT u.username, c.operation, c.operand_a, c.operand_b, c.result
-FROM calculations c
-JOIN users u ON c.user_id = u.id;
-```
 
-## (D) Update a Record
-```
-UPDATE calculations
-SET result = 6
-WHERE id = 1;
-```
-## (E) Delete a Record
-```
-DELETE FROM calculations
-WHERE id = 2;
-```
-**Verification Steps**
-```
-Docker Compose – all containers run successfully
-pgAdmin – connected to database fastapi_db
-SQL Queries – created, inserted, joined, updated, and deleted records successfully
-FastAPI – endpoints verified via Swagger UI
-```
-## Run Tests Locally:
-```
-pytest --cov=app
-```
+Expected logs snippet:
 
-## Expected Output:
-```
-venv) (base) shannu@Shannus-MacBook-Air fastapi_calculator % pytest --cov=app
+✔ fastapi_calculator-web  Built
+✔ Container postgres_db   Running
+✔ Container fastapi_app   Recreated
+✔ Container pgadmin       Running
+fastapi_app  | INFO:     Uvicorn running on http://0.0.0.0:8000
 
-======================================== test session starts ========================================
-platform darwin -- Python 3.12.4, pytest-8.4.2, pluggy-1.6.0
-rootdir: /Users/shannu/Desktop/MS/web_API/fastapi_calculator
-plugins: anyio-4.11.0, cov-7.0.0
-collected 12 items                                                                                  
+Service URLs
+Service	URL	Notes
+FastAPI App	http://localhost:8000/docs
+	Interactive Swagger UI
+pgAdmin 4	http://localhost:5050
+	Default: admin@admin.com / admin
+PostgreSQL	Host: db, Port: 5432	User: postgres, Password: postgres
 
-tests/e2e/test_playwright.py s                                                                [  8%]
-tests/integration/test_api_endpoints.py ......                                                [ 58%]
-tests/unit/test_operations.py .....                                                           [100%]
 
-========================================== tests coverage ===========================================
-_________________________ coverage: platform darwin, python 3.12.4-final-0 __________________________
+Running Tests Locally
 
-Name                   Stmts   Miss  Cover
-------------------------------------------
-app/__init__.py            0      0   100%
-app/logger_config.py       6      0   100%
-app/main.py               33      0   100%
-app/operations.py         10      0   100%
-------------------------------------------
-TOTAL                     49      0   100%
-=================================== 11 passed, 1 skipped in 0.86s ===================================
-(venv) (base) shannu@Shannus-MacBook-Air fastapi_calculator %
+From the project root (with virtualenv activated):
+
+Run all tests
+pytest
+
+Run unit + integration tests with coverage
+pytest --cov=app --cov-report=term-missing tests/unit tests/integration
+
+
+Example output:
+
+CI/CD Pipeline (GitHub Actions → Docker Hub)
+
+Workflow file: .github/workflows/ci.yml
+
+On every push / PR:
+
+Set up Python and dependencies
+
+Run unit, integration, and E2E tests
+
+If all tests pass:
+
+Build Docker image from Dockerfile
+
+Tag as ${DOCKERHUB_USERNAME}/fastapi_calculator:latest
+
+Push image to Docker Hub
+
+Docker Hub repository:
+
+Name: shanmukha1315/fastapi_calculator
+
+URL: https://hub.docker.com/r/shanmukha1315/fastapi_calculator
+
+You can pull and run the image directly:
+
+docker pull shanmukha1315/fastapi_calculator:latest
 ```
