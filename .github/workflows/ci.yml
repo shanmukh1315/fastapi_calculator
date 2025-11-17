@@ -2,7 +2,9 @@ name: CI - FastAPI Calculator
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
 
 jobs:
   test-and-deploy:
@@ -21,10 +23,10 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U user -d test_db"
-          --health-interval 5s
-          --health-timeout 2s
-          --health-retries 10
+          --health-cmd="pg_isready -U user -d test_db"
+          --health-interval=5s
+          --health-timeout=2s
+          --health-retries=10
 
     steps:
       - name: Checkout repository
@@ -44,7 +46,7 @@ jobs:
 
       - name: Run unit + integration tests
         env:
-          # This should match the TEST_DATABASE_URL used in your tests/conftest.py
+          # must match TEST_DATABASE_URL used in tests/conftest.py
           TEST_DATABASE_URL: postgresql://user:password@localhost:5432/test_db
         run: |
           pytest --maxfail=1 --disable-warnings -q
@@ -56,8 +58,8 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.shanmukha1315 }}
-          password: ${{ secrets.Abcd@1315}}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
