@@ -1,4 +1,4 @@
-# FastAPI Calculator – Modules 8, 9 & 10
+# FastAPI Calculator 
 ```
 A fully containerized FastAPI Calculator Web Application integrated with PostgreSQL and pgAdmin, extended in Module 10 with a **secure user model, Pydantic validation, password hashing, database tests, and a full CI/CD pipeline that builds and pushes a Docker image to Docker Hub.
 ```
@@ -7,7 +7,7 @@ A fully containerized FastAPI Calculator Web Application integrated with Postgre
 
 ## Features
 
-### Calculator API (Modules 8 & 9)
+### Calculator API 
 ```
 - REST endpoints built with **FastAPI**:
   - `GET /add?a=&b=`
@@ -21,7 +21,7 @@ A fully containerized FastAPI Calculator Web Application integrated with Postgre
   - `CREATE TABLE`, `INSERT`, `SELECT`, `UPDATE`, `DELETE`
   - One-to-many relationship: **Users ↔ Calculations**
 ```
-### Secure User Model & Validation (Module 10)
+### Secure User Model & Validation 
 ```
 - **SQLAlchemy `User` model** (`app/models.py`)
   - `id` (PK)
