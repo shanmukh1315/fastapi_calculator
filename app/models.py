@@ -1,6 +1,20 @@
 # app/models.py
-from sqlalchemy import Column, Integer, String, DateTime, func
+from enum import Enum
+
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    Float,
+    Enum as SAEnum,
+    ForeignKey,
+    func,
+)
+from sqlalchemy.orm import relationship
+
 from app.db import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -10,3 +24,30 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # One-to-many: User → Calculations
+    calculations = relationship(
+        "Calculation",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+
+class CalculationType(str, Enum):
+    ADD = "add"
+    SUBTRACT = "subtract"
+    MULTIPLY = "multiply"
+    DIVIDE = "divide"
+
+
+class Calculation(Base):
+    __tablename__ = "calculations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    a = Column(Float, nullable=False)
+    b = Column(Float, nullable=False)
+    type = Column(SAEnum(CalculationType, name="calculation_type"), nullable=False)
+    result = Column(Float, nullable=True)
+
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user = relationship("User", back_populates="calculations")
