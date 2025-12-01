@@ -1,4 +1,4 @@
-# Reflection — Module 12 (FastAPI Calculator)
+# Reflection — (FastAPI Calculator)
 
 This document summarizes the work done for Module 12: implementing user registration/login, JWT authentication, calculation BREAD endpoints, tests, and CI/CD automation. It notes key design decisions, challenges encountered, and recommended follow-ups.
 
@@ -67,7 +67,6 @@ If you want, I can now:
 
 Tell me which option you prefer and I will proceed.
 
-# Module 11 Reflection – Calculation Model, Factory Pattern & CI/CD
 
 ## What I built
 
