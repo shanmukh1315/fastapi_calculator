@@ -1,179 +1,251 @@
-
 # FastAPI Calculator
-```
-A fully containerized FastAPI Calculator Web Application integrated with PostgreSQL and pgAdmin, with:
 
-- Calculator endpoints for basic arithmetic.
-- Secure user model with password hashing.
-- Calculation model backed by SQLAlchemy.
-- Pydantic validation for users and calculations.
-- Automated unit, integration, and E2E tests.
-- GitHub Actions CI pipeline that runs tests, reports coverage, and builds/pushes a Docker image to Docker Hub.
-```
+A fully containerized FastAPI Calculator Web Application integrated with PostgreSQL and pgAdmin.
 
-## Features
+Features:
 
-### Calculator API
-```
-- REST endpoints built with **FastAPI**:
-  - `GET /add?a=&b=`
-  - `GET /subtract?a=&b=`
-  - `GET /multiply?a=&b=`
-  - `GET /divide?a=&b=`
-- Centralized logging via `app/logger_config.py`.
-- Containerized with **Docker** and orchestrated with **Docker Compose**.
-- **PostgreSQL** database + **pgAdmin 4** UI.
-- Database schema supports a one-to-many relationship: **Users ↔ Calculations**.
-```
+- Calculator REST API with basic arithmetic operations
+- Secure `User` model (password hashing)
+- Calculation model stored with SQLAlchemy and linked to users
+- Pydantic validation for request/response models
+- Unit, integration, and E2E tests with `pytest` and `playwright`
+- GitHub Actions CI to run tests, report coverage, and build/push a Docker image
 
-### Data Models & Validation
+---
 
-#### User Model
-```
-- **SQLAlchemy `User` model** (`app/models.py`)
-  - `id` (PK)
-  - `username` – unique, indexed
-  - `email` – unique, indexed
-  - `password_hash`
-  - `created_at` – timestamp with server default
-- **Pydantic Schemas** (`app/schemas.py`)
-  - `UserCreate` – `username`, `email`, `password` (input)
-  - `UserRead` – `id`, `username`, `email`, `created_at` (output, no password)
-  - Email validation using `EmailStr`.
+## Quick Links
 
-- **Secure password hashing** (`app/security.py`)
-  - Hashing with `passlib` (`pbkdf2_sha256`):
-    - `hash_password(plain_password)`
-    - `verify_password(plain_password, hashed_password)`
+- API docs (locally): `http://localhost:8000/docs`
+- App root (locally): `http://localhost:8000/`
 
-- **User API router** (`app/users.py`)
-  - `POST /api/users` – create user.
-  - Validates:
-    - Unique `username`.
-    - Unique `email`.
-  - Stores only `password_hash` in the database.
-  - Returns `UserRead` schema (no raw password).
-```
-#### Calculation Model
-```
-- **SQLAlchemy `Calculation` model** (`app/models.py`)
-  - `id` (PK)
-  - `a`: `float`
-  - `type`: `CalculationType` enum
-  - `b`: `float`
-  - `result`: `float` (optional, stored after computation)
-  - `user_id`: optional FK → `User.id`
-- **`CalculationType` enum** (`app/models.py`)
-  - Values: `"add"`, `"subtract"`, `"multiply"`, `"divide"`.
+---
 
-- **Pydantic Schemas** (`app/schemas.py`)
-  - `CalculationCreate` – `a`, `type`, `b`, with validation:
-    - `type` must be one of `CalculationType`.
-    - Division by zero is rejected when `type == CalculationType.DIVIDE`.
-  - `CalculationRead` – `id`, `a`, `type`, `b`, `result`, optional `user_id`.
-```
+## API Endpoints
 
+Public arithmetic endpoints (also available via `app/operations.py` and `app/calculation_factory.py`):
 
-### Calculation Factory Pattern
-```
-To keep calculation logic organized and extensible, the app uses a small factory in `app/calculation_factory.py`:
+- `GET /add?a=<float>&b=<float>`
+- `GET /subtract?a=<float>&b=<float>`
+- `GET /multiply?a=<float>&b=<float>`
+- `GET /divide?a=<float>&b=<float>`
 
-- `CalculationFactory.get_operation(calc_type)`  
-  Returns an operation object exposing:
+User & calculation REST API (prefixed with `/api`):
 
-  ```python
-  op = CalculationFactory.get_operation(calc_type)
-  result = op.compute(a, b)
-````
+- `POST /api/users` — create a user (returns `UserRead` schema)
+- `POST /api/users/register` — alias for register
+- `POST /api/users/login` — returns JWT `access_token`
+- `GET /api/calculations` — browse (requires Bearer token)
+- `POST /api/calculations` — create calculation (requires Bearer token)
+- `GET /api/calculations/{id}` — read calculation (user-scoped)
+- `PUT /api/calculations/{id}` — update calculation (user-scoped)
+- `DELETE /api/calculations/{id}` — delete calculation (user-scoped)
+
+Authentication: endpoints under `/api/calculations` require a Bearer JWT token obtained from `POST /api/users/login`.
+
+OpenAPI/Swagger UI includes an Authorize button so you can paste `Bearer <token>` to test protected endpoints.
+
+---
+
+## Data Models (high level)
+
+- `User` (`app/models.py`) — `id`, `username`, `email`, `password_hash`, `created_at`
+- `Calculation` (`app/models.py`) — `id`, `a`, `type` (`add|subtract|multiply|divide`), `b`, `result`, `user_id`
+
+Validation rules (in `app/schemas.py`):
+
+- `UserCreate` validates `username`, `email` (as `EmailStr`) and `password` length
+- `CalculationCreate` rejects division-by-zero when `type == "divide"`
+
+Computation is centralized by `app/calculation_factory.py` which returns operation objects that implement `.compute(a,b)`.
+
+---
 
 ## Testing
 
-### Unit Tests
-```
-Located under `tests/unit/`:
+Run tests locally (virtualenv recommended):
 
-* `test_operations.py` – calculator functions.
-* `test_schemas.py` – user Pydantic validation.
-* `test_security.py` – password hash/verify behavior.
-* `test_db.py` – database engine and session.
-* `test_startup.py` – FastAPI startup behavior.
-* `test_calculation_factory.py` – factory behavior:
-
-  * Correct operation for each `CalculationType`.
-  * Invalid type raises `ValueError`.
-  * Divide operation raises `ZeroDivisionError` on divide-by-zero.
-* `test_calculation_schemas.py` – calculation schema validation:
-
-  * Valid `CalculationCreate` objects.
-  * Division-by-zero rejected with `ValidationError`.
-```
-### Integration Tests
-```
-Located under `tests/integration/`:
-
-* `test_api_endpoints.py` – calculator API endpoints.
-* `test_user_db.py` – User database uniqueness and constraints.
-* `test_users_api.py` – `/api/users` behavior:
-
-  * successful creation,
-  * duplicate username,
-  * duplicate email.
-* `test_calculation_db.py` – Calculation model:
-
-  * Create and persist a `Calculation` with a computed `result`.
-  * Verify stored fields and `result`.
-  * Ensure `user_id` FK and `calc.user` relationship work as expected.
-```
-### End-to-End Test
-```
-* `tests/e2e/test_playwright.py` – basic smoke test using Playwright to hit the running app via a browser.
-```
-### Databases Used in Tests
-```
-* **Local (default):** SQLite – `sqlite:///./test.db`
-* **CI:** PostgreSQL using the `TEST_DATABASE_URL` environment variable and a Postgres service container.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pytest --maxfail=1 -q
 ```
 
+Run tests with coverage:
 
-## CI/CD Pipeline
-
-### GitHub Actions
+```bash
+pytest --cov=app --cov-report=term-missing
 ```
-Workflow file: `.github/workflows/ci.yml`
+
+E2E Playwright test (requires `playwright` browsers):
+
+```bash
+playwright install chromium
+pytest tests/e2e/test_playwright.py
 ```
-On every push or pull request to `main`:
 
-1. **Set up environment**
+CI (GitHub Actions) runs the same tests and a coverage gate (currently set to 95% line coverage).
 
-   * Check out the repository.
-   * Set up Python 3.12.
-   * Start a PostgreSQL 15 service container for tests.
-   * Install dependencies:
+---
 
-     * `requirements.txt`
-     * `pytest`, `pytest-cov`, `playwright` (and install Chromium for E2E test).
+## Manual verification via OpenAPI (Swagger UI)
 
-2. **Run tests with coverage**
+Use the interactive docs to manually verify Module 12 BREAD flows and auth:
 
-   ```bash
-   pytest --cov=app --cov-report=term-missing
-   ```
+1. Start the app locally:
 
-   * Ensures all modules under `app/` are exercised.
-   * Current configuration targets 100% coverage for the `app` package.
+```bash
+uvicorn app.main:app --reload
+```
+
+2. Open the interactive docs at `http://localhost:8000/docs`.
+
+3. Register a user (POST `/api/users` or `/api/users/register`):
+
+Request example (JSON):
+
+```json
+{
+  "username": "alice",
+  "email": "alice@example.com",
+  "password": "secret123"
+}
+```
+
+4. Login (POST `/api/users/login`) and copy the `access_token` from the response:
+
+Request example (JSON):
+
+```json
+{
+  "username": "alice",
+  "password": "secret123"
+}
+```
+
+Response example:
+
+```json
+{
+  "access_token": "eyJ...",
+  "token_type": "bearer"
+}
+```
+
+5. Click the "Authorize" button in Swagger UI and enter the value `Bearer <access_token>`.
+
+6. Test BREAD operations under `/api/calculations` (examples):
+
+- Create (POST `/api/calculations`):
+
+```json
+{
+  "a": 10,
+  "type": "add",
+  "b": 5
+}
+```
+
+- Browse (GET `/api/calculations`) — lists the authenticated user's calculations.
+- Read (GET `/api/calculations/{id}`) — returns specific calculation if owned.
+- Update (PUT `/api/calculations/{id}`) — modify fields and recompute result.
+- Delete (DELETE `/api/calculations/{id}`) — remove calculation.
+
+7. Curl examples (replace `localhost:8000` if running elsewhere):
+
+```bash
+# register
+curl -s -X POST http://localhost:8000/api/users -H "Content-Type: application/json" -d '{"username":"alice","email":"alice@example.com","password":"secret123"}'
+
+# login -> extract token (requires jq)
+TOKEN=$(curl -s -X POST http://localhost:8000/api/users/login -H "Content-Type: application/json" -d '{"username":"alice","password":"secret123"}' | jq -r .access_token)
+
+# create a calculation
+curl -s -X POST http://localhost:8000/api/calculations -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"a":10,"type":"add","b":5}'
+
+# list calculations
+curl -s -X GET http://localhost:8000/api/calculations -H "Authorization: Bearer $TOKEN"
+
+# get a calculation (id 1)
+curl -s -X GET http://localhost:8000/api/calculations/1 -H "Authorization: Bearer $TOKEN"
+
+# update calculation (id 1)
+curl -s -X PUT http://localhost:8000/api/calculations/1 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"a":20,"type":"add","b":5}'
+
+# delete calculation (id 1)
+curl -s -X DELETE http://localhost:8000/api/calculations/1 -H "Authorization: Bearer $TOKEN"
+```
+
+Notes:
+
+- If you get `401 Unauthorized`, verify the `Authorization` header and that the token was generated by the running server (`SECRET_KEY` must match).
+- If you get `403 Forbidden`, the authenticated user is not the owner of the requested calculation.
+
+---
+
+## Docker & Deployment
+
+Build and run locally with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+The `Dockerfile` and `docker-compose.yml` are included; CI builds the same image and pushes to Docker Hub when workflow succeeds.
+
+To pull the published image:
+
+```bash
+docker pull shanmukh1315/fastapi_calculator:latest
+```
+
+Note: CI requires GitHub repository secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, and `SECRET_KEY`.
+
+---
+
+## Project layout
+
+```
+fastapi_calculator/
+├── app/                       # application package
+├── tests/                     # unit, integration, e2e tests
+├── .github/workflows/ci.yml   # CI workflow
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## Contributing
+
+1. Create a feature branch
+2. Run tests locally: `pytest`
+3. Open a PR against `main`
+
+---
+
+If you want a slightly different README variant (more compact or more detailed API examples), tell me which sections to expand and I will update it.
+pytest --cov=app --cov-report=term-missing
+
+````
+
+- Ensures all modules under `app/` are exercised.
+- Current configuration targets 100% coverage for the `app` package.
 
 3. **Run E2E Playwright test**
 
-   ```bash
-   pytest tests/e2e/test_playwright.py
-   ```
+```bash
+pytest tests/e2e/test_playwright.py
+````
 
 4. **Build and push Docker image (on success)**
 
    Using `docker/build-push-action`, the workflow:
 
-   * Builds the image from `Dockerfile`.
-   * Tags and pushes:
+   - Builds the image from `Dockerfile`.
+   - Tags and pushes:
 
      ```text
      shanmukha1315/fastapi_calculator:latest
@@ -182,8 +254,8 @@ On every push or pull request to `main`:
 
 ### Docker Hub
 
-* Repository: `shanmukha1315/fastapi_calculator`
-* URL: [https://hub.docker.com/r/shanmukha1315/fastapi_calculator](https://hub.docker.com/r/shanmukha1315/fastapi_calculator)
+- Repository: `shanmukha1315/fastapi_calculator`
+- URL: [https://hub.docker.com/r/shanmukha1315/fastapi_calculator](https://hub.docker.com/r/shanmukha1315/fastapi_calculator)
 
 Pull the latest image:
 
@@ -212,18 +284,18 @@ fastapi_calculator/
 │
 ├── app/
 │   ├── __init__.py
-│   ├── main.py                 
-│   ├── operations.py           
-│   ├── db.py                 
-│   ├── models.py              
-│   ├── schemas.py             
-│   ├── security.py             
-│   ├── users.py               
-│   ├── calculation_factory.py 
-│   └── logger_config.py        
+│   ├── main.py
+│   ├── operations.py
+│   ├── db.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── security.py
+│   ├── users.py
+│   ├── calculation_factory.py
+│   └── logger_config.py
 │
 ├── tests/
-│   ├── conftest.py             
+│   ├── conftest.py
 │   ├── unit/
 │   │   ├── test_db.py
 │   │   ├── test_operations.py
@@ -242,18 +314,16 @@ fastapi_calculator/
 │
 ├── .github/
 │   └── workflows/
-│       └── ci.yml             
+│       └── ci.yml
 │
-├── .coveragerc                 
+├── .coveragerc
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
-├── reflection.md             
+├── reflection.md
 ├── .gitignore
 └── README.md
 ```
-
-
 
 ## Local Development (without Docker)
 
@@ -281,9 +351,8 @@ uvicorn app.main:app --reload
 
 Then open:
 
-* Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
-* Root endpoint: [http://localhost:8000/](http://localhost:8000/)
-
+- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Root endpoint: [http://localhost:8000/](http://localhost:8000/)
 
 ## Running with Docker Compose
 
@@ -311,8 +380,6 @@ fastapi_app  | INFO:     Uvicorn running on http://0.0.0.0:8000
 | pgAdmin 4   | [http://localhost:5050](http://localhost:5050)           | Default: [admin@admin.com](mailto:admin@admin.com) / admin |
 | PostgreSQL  | `db:5432`                                                | User: `postgres`, Password: `postgres`                     |
 
-
-
 ## Running Tests Locally
 
 From the project root (with virtualenv activated):
@@ -328,6 +395,7 @@ pytest
 ```bash
  pytest --cov=app --cov=tests --cov-report=term-missing
 ```
+
 ```
 ================================================================ tests coverage ================================================================
 _______________________________________________ coverage: platform darwin, python 3.12.4-final-0 _______________________________________________
