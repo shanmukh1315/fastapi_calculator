@@ -48,8 +48,33 @@ jobs:
         env:
           # must match TEST_DATABASE_URL used in tests/conftest.py
           TEST_DATABASE_URL: postgresql://user:password@localhost:5432/test_db
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          pytest --cov=app --cov-report=term-missing --maxfail=1 --disable-warnings
+          pytest --cov=app --cov-report=xml --cov-report=term-missing --maxfail=1 --disable-warnings
+
+      - name: Fail if coverage < 100%
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('coverage.xml')
+          root = tree.getroot()
+          totals = root.find('coverage') or root
+          line_rate = float(root.attrib.get('line-rate', 0)) if 'line-rate' in root.attrib else None
+          if line_rate is None:
+            # Fallback: compute total from packages
+            packages = root.findall('.//package')
+            for pkg in packages:
+              if pkg.attrib.get('name') == 'app':
+                lr = float(pkg.attrib.get('line-rate', 0))
+                line_rate = lr
+                break
+          if line_rate is None:
+            print('Could not determine coverage from coverage.xml')
+            raise SystemExit(1)
+          print(f'Line coverage: {line_rate*100:.2f}%')
+          if line_rate < 1.0:
+            raise SystemExit('Coverage below 100%')
+          PY
 
       - name: Run E2E tests
         run: |
