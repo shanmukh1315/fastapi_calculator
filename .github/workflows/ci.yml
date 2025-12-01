@@ -42,18 +42,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov playwright
-          # on GitHub-hosted Linux, include deps for Chromium
           playwright install --with-deps chromium
 
-      # ---- UNIT + INTEGRATION TESTS WITH COVERAGE ----
+      # -------- UNIT + INTEGRATION TESTS (NO E2E HERE) --------
       - name: Run unit + integration tests with coverage
         env:
-          # must match TEST_DATABASE_URL used in tests/conftest.py
           TEST_DATABASE_URL: postgresql://user:password@localhost:5432/test_db
           DATABASE_URL: postgresql://user:password@localhost:5432/test_db
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          pytest --cov=app --cov-report=xml --cov-report=term-missing --maxfail=1 --disable-warnings
+          # IMPORTANT: only run unit + integration, not tests/e2e
+          pytest tests/unit tests/integration \
+            --cov=app --cov-report=xml --cov-report=term-missing \
+            --maxfail=1 --disable-warnings
 
       - name: Fail if coverage < 95%
         run: |
@@ -80,7 +81,7 @@ jobs:
             raise SystemExit(f"Coverage below {threshold*100:.0f}%")
           PY
 
-      # ---- START APP + RUN PLAYWRIGHT E2E ----
+      # -------- START APP AND RUN PLAYWRIGHT E2E --------
       - name: Run E2E tests
         env:
           DATABASE_URL: postgresql://user:password@localhost:5432/test_db
@@ -107,10 +108,10 @@ jobs:
             exit 1
           fi
 
-          # Run Playwright E2E tests
+          # Now run ONLY the E2E tests
           pytest tests/e2e -q
 
-      # ---- DOCKER BUILD & PUSH ----
+      # -------- DOCKER BUILD & PUSH --------
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
