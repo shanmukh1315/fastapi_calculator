@@ -42,12 +42,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov playwright
-          playwright install chromium
+          # on GitHub-hosted Linux, include deps for Chromium
+          playwright install --with-deps chromium
 
+      # ---- UNIT + INTEGRATION TESTS WITH COVERAGE ----
       - name: Run unit + integration tests with coverage
         env:
           # must match TEST_DATABASE_URL used in tests/conftest.py
           TEST_DATABASE_URL: postgresql://user:password@localhost:5432/test_db
+          DATABASE_URL: postgresql://user:password@localhost:5432/test_db
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           pytest --cov=app --cov-report=xml --cov-report=term-missing --maxfail=1 --disable-warnings
@@ -58,46 +61,38 @@ jobs:
           import xml.etree.ElementTree as ET
           tree = ET.parse('coverage.xml')
           root = tree.getroot()
-          # try common locations/attributes for line-rate
+
           line_rate = None
           if 'line-rate' in root.attrib:
-            line_rate = float(root.attrib.get('line-rate', 0))
+            line_rate = float(root.attrib['line-rate'])
           else:
-            # Fallback: look for packages or sources with line-rate
             pkg = root.find('.//package')
             if pkg is not None and 'line-rate' in pkg.attrib:
-              line_rate = float(pkg.attrib.get('line-rate', 0))
-            else:
-              # try the coverage element if present
-              cov = root.find('coverage')
-              if cov is not None and 'line-rate' in cov.attrib:
-                line_rate = float(cov.attrib.get('line-rate', 0))
+              line_rate = float(pkg.attrib['line-rate'])
 
           if line_rate is None:
-            print('Could not determine coverage from coverage.xml')
+            print("Could not determine coverage from coverage.xml")
             raise SystemExit(1)
-          print(f'Line coverage: {line_rate*100:.2f}%')
+
+          print(f"Line coverage: {line_rate*100:.2f}%")
           threshold = 0.95
           if line_rate < threshold:
-            raise SystemExit(f'Coverage below {threshold*100:.0f}%')
+            raise SystemExit(f"Coverage below {threshold*100:.0f}%")
           PY
 
+      # ---- START APP + RUN PLAYWRIGHT E2E ----
       - name: Run E2E tests
         env:
-          # CRITICAL: Pass the DB URL to the running app so it can connect
           DATABASE_URL: postgresql://user:password@localhost:5432/test_db
-          # If your app logic specifically looks for TEST_DATABASE_URL, include this too:
           TEST_DATABASE_URL: postgresql://user:password@localhost:5432/test_db
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          # Start the app in background
-          # We redirect output to a log file so we can see errors if it crashes
+          # Start FastAPI app in the background
           nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
 
-          # Wait for server to be ready
           echo "Waiting for server to start..."
           for i in {1..30}; do
-            if curl -sSf http://127.0.0.1:8000/docs >/dev/null 2>&1; then
+            if curl -sSf http://127.0.0.1:8000/docs > /dev/null 2>&1; then
               echo "Server is ready!"
               break
             fi
@@ -105,16 +100,17 @@ jobs:
             sleep 1
           done
 
-          # Check if server is actually running; if not, print logs and fail
-          if ! curl -sSf http://127.0.0.1:8000/docs >/dev/null 2>&1; then
-            echo "Server failed to start. Printing logs:"
+          # If still not up, dump logs and fail
+          if ! curl -sSf http://127.0.0.1:8000/docs > /dev/null 2>&1; then
+            echo "Server failed to start. Uvicorn logs:"
             cat uvicorn.log
             exit 1
           fi
 
-          # Run the E2E tests
+          # Run Playwright E2E tests
           pytest tests/e2e -q
 
+      # ---- DOCKER BUILD & PUSH ----
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
