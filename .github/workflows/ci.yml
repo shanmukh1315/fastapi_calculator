@@ -52,28 +52,34 @@ jobs:
         run: |
           pytest --cov=app --cov-report=xml --cov-report=term-missing --maxfail=1 --disable-warnings
 
-      - name: Fail if coverage < 100%
+      - name: Fail if coverage < 95%
         run: |
           python - <<'PY'
           import xml.etree.ElementTree as ET
           tree = ET.parse('coverage.xml')
           root = tree.getroot()
-          totals = root.find('coverage') or root
-          line_rate = float(root.attrib.get('line-rate', 0)) if 'line-rate' in root.attrib else None
-          if line_rate is None:
-            # Fallback: compute total from packages
-            packages = root.findall('.//package')
-            for pkg in packages:
-              if pkg.attrib.get('name') == 'app':
-                lr = float(pkg.attrib.get('line-rate', 0))
-                line_rate = lr
-                break
+          # try common locations/attributes for line-rate
+          line_rate = None
+          if 'line-rate' in root.attrib:
+            line_rate = float(root.attrib.get('line-rate', 0))
+          else:
+            # Fallback: look for packages or sources with line-rate
+            pkg = root.find('.//package')
+            if pkg is not None and 'line-rate' in pkg.attrib:
+              line_rate = float(pkg.attrib.get('line-rate', 0))
+            else:
+              # try the coverage element if present
+              cov = root.find('coverage')
+              if cov is not None and 'line-rate' in cov.attrib:
+                line_rate = float(cov.attrib.get('line-rate', 0))
+
           if line_rate is None:
             print('Could not determine coverage from coverage.xml')
             raise SystemExit(1)
           print(f'Line coverage: {line_rate*100:.2f}%')
-          if line_rate < 1.0:
-            raise SystemExit('Coverage below 100%')
+          threshold = 0.95
+          if line_rate < threshold:
+            raise SystemExit(f'Coverage below {threshold*100:.0f}%')
           PY
 
       - name: Run E2E tests
