@@ -83,18 +83,36 @@ jobs:
           PY
 
       - name: Run E2E tests
+        env:
+          # CRITICAL: Pass the DB URL to the running app so it can connect
+          DATABASE_URL: postgresql://user:password@localhost:5432/test_db
+          # If your app logic specifically looks for TEST_DATABASE_URL, include this too:
+          TEST_DATABASE_URL: postgresql://user:password@localhost:5432/test_db
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          # Start the app in background for E2E tests
-          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          # Start the app in background
+          # We redirect output to a log file so we can see errors if it crashes
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1 &
+
           # Wait for server to be ready
+          echo "Waiting for server to start..."
           for i in {1..30}; do
             if curl -sSf http://127.0.0.1:8000/docs >/dev/null 2>&1; then
-              echo "Server ready" && break
+              echo "Server is ready!"
+              break
             fi
-            echo "Waiting for server... ($i)"
+            echo "Waiting... ($i)"
             sleep 1
           done
-          # Run all playwright e2e tests
+
+          # Check if server is actually running; if not, print logs and fail
+          if ! curl -sSf http://127.0.0.1:8000/docs >/dev/null 2>&1; then
+            echo "Server failed to start. Printing logs:"
+            cat uvicorn.log
+            exit 1
+          fi
+
+          # Run the E2E tests
           pytest tests/e2e -q
 
       - name: Log in to Docker Hub
