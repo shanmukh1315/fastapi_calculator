@@ -1,7 +1,5 @@
 # Reflection — (FastAPI Calculator)
 
-This document summarizes the work done for Module 12: implementing user registration/login, JWT authentication, calculation BREAD endpoints, tests, and CI/CD automation. It notes key design decisions, challenges encountered, and recommended follow-ups.
-
 ## What I implemented
 
 - Implemented user endpoints: `POST /api/users` (create), `POST /api/users/register` (alias), and `POST /api/users/login` (returns JWT access token).
@@ -66,7 +64,6 @@ If you want, I can now:
 - Keep the gate at 95% and create a separate checklist for further improvements above.
 
 Tell me which option you prefer and I will proceed.
-
 
 ## What I built
 

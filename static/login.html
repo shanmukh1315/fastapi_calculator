@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - FastAPI Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 640px; margin: 2rem auto; }
+    label { display:block; margin-top: 0.75rem }
+    input { width:100%; padding:0.5rem; }
+    .error { color: #b00020; }
+    .success { color: #0a0; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem }
+  </style>
+</head>
+<body>
+  <h1>Login</h1>
+  <form id="loginForm">
+    <label>Username
+      <input id="username" type="text" required />
+    </label>
+    <label>Password
+      <input id="password" type="password" minlength="6" required />
+    </label>
+    <div id="msg" role="alert"></div>
+    <button type="submit">Login</button>
+  </form>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const msg = document.getElementById('msg');
+
+    function showError(text) {
+      msg.innerText = text;
+      msg.className = 'error';
+    }
+    function showSuccess(text) {
+      msg.innerText = text;
+      msg.className = 'success';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.innerText = '';
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!username || password.length < 6) {
+        return showError('Please enter valid credentials.');
+      }
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          // store token for use in later authenticated requests
+          localStorage.setItem('token', data.access_token);
+          showSuccess('Login successful. Token stored in localStorage.');
+        } else if (res.status === 401) {
+          showError('Invalid credentials.');
+        } else {
+          const err = await res.json();
+          showError(err.detail || 'Login failed');
+        }
+      } catch (err) {
+        showError('Network error');
+      }
+    });
+  </script>
+</body>
+</html>

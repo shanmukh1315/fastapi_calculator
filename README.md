@@ -84,6 +84,22 @@ playwright install chromium
 pytest tests/e2e/test_playwright.py
 ```
 
+Frontend pages
+
+- `http://localhost:8000/register` — simple registration page with client-side validation.
+- `http://localhost:8000/login` — simple login page that stores JWT in `localStorage` on success.
+
+To run the frontend and E2E locally:
+
+```bash
+# start the server
+uvicorn app.main:app --reload
+# in another terminal: install playwright browsers
+playwright install chromium
+# run the E2E tests (they target http://127.0.0.1:8000)
+pytest tests/e2e -q
+```
+
 CI (GitHub Actions) runs the same tests and a coverage gate (currently set to 95% line coverage).
 
 ---
