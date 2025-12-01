@@ -30,7 +30,7 @@ This project implements a fully authenticated FastAPI application with **JWT log
 | Resource             | Link                                                                                                                 |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | **GitHub Repo**      | [https://github.com/shanmukh1315/fastapi_calculator](https://github.com/shanmukh1315/fastapi_calculator)             |
-| **Docker Hub Image** | [https://hub.docker.com/r/shanmukh1315/fastapi_calculator](https://hub.docker.com/r/shanmukh1315/fastapi_calculator) |
+| **Docker Hub Image** | https://hub.docker.com/repository/docker/shanmukha1315/fastapi_calculator/general |
 | **Local App URL**    | [http://127.0.0.1:8000](http://127.0.0.1:8000)                                                                       |
 | **Swagger UI**       | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)                                                             |
 | **Register Page**    | [http://127.0.0.1:8000/register](http://127.0.0.1:8000/register)                                                     |
