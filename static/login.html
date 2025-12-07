@@ -5,26 +5,49 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Login - FastAPI Calculator</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 640px; margin: 2rem auto; }
-    label { display:block; margin-top: 0.75rem }
-    input { width:100%; padding:0.5rem; }
-    .error { color: #b00020; }
-    .success { color: #0a0; }
-    button { margin-top: 1rem; padding: 0.5rem 1rem }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(180deg,#f5f5f7 0%, #ffffff 100%);
+        color: #e4e4e7;
+        margin: 0;
+        padding: 40px;
+        line-height: 1.6;
+    }
+    .page-frame{ max-width:980px; margin:0 auto; background:#ffffff; border-radius:12px; padding:28px; box-shadow:0 18px 50px rgba(15,23,42,0.08); }
+    .container { width:100%; max-width:920px; margin: 0 auto; }
+    .card { background-color:#1e1e20; border:1px solid #333333; border-radius:12px; padding:24px; margin-bottom:24px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.5); }
+    h1 { color:#ffffff; font-weight:700; margin:0 0 12px 0; }
+    label { display:block; font-size:0.85rem; color:#a1a1aa; margin-bottom:6px; margin-top:10px }
+    input[type="text"], input[type="password"] { width:100%; background-color:#121212; border:1px solid #3f3f46; color:#ffffff; padding:12px; border-radius:8px; font-size:0.95rem; box-sizing:border-box; transition: border-color .2s }
+    input:focus { border-color:#a855f7; outline:none }
+    .btn { padding:10px 20px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:0.9rem; margin-top:15px; margin-right:10px; transition:background .2s }
+    .btn-primary { background-color:#a855f7; color:#fff }
+    .btn-secondary { background-color:#3f3f46; color:#fff }
+    .muted{color:#a1a1aa;font-size:13px}
+    .msg{margin-top:8px;font-size:14px;color:#e4e4e7}
+    a.accent{ color:#a855f7; text-decoration:none }
+    @media(max-width:480px){ .card{ padding:20px } }
   </style>
 </head>
 <body>
-  <h1>Login</h1>
-  <form id="loginForm" novalidate>
+  <div class="page-frame">
+    <div class="container">
+      <div class="card">
+    <h1>Login</h1>
+    <form id="loginForm" novalidate>
     <label>Username
       <input id="username" type="text" required />
     </label>
     <label>Password
       <input id="password" type="password" minlength="6" required />
     </label>
-    <div id="msg" role="alert"></div>
-    <button type="submit">Login</button>
-  </form>
+      <div id="msg" class="msg" role="alert"></div>
+      <button class="btn btn-primary" type="submit">Login</button>
+      </form>
+      <div class="muted">Don't have an account? Click <a class="accent" href="/register">Register</a>.</div>
+    </div>
+  </div>
 
   <script>
     const form = document.getElementById('loginForm');

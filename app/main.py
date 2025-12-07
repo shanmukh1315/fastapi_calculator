@@ -121,6 +121,11 @@ def login_page():
     return FileResponse("static/login.html")
 
 
+@app.get("/calculations", include_in_schema=False)
+def calculations_page():
+    return FileResponse("static/calculations.html")
+
+
 # Expose API-compatible routes at top-level for simple frontend posting
 @app.post("/register", response_model=UserCreate)
 def register_api(payload: UserCreate, db: Session = Depends(get_db)):
