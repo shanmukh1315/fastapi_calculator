@@ -102,8 +102,10 @@
         });
 
         if (res.ok) {
-          const data = await res.json();
-          showSuccess('Registered successfully. You can now log in.');
+          // registration succeeded — show success message and keep user on page
+          showSuccess('Registered successfully');
+          // keep the message visible briefly so tests/users see it
+          return;
         } else {
           const err = await res.json();
           showError(err.detail || 'Registration failed');

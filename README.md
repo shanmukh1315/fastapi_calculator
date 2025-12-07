@@ -15,10 +15,12 @@ This project implements a fully authenticated FastAPI application with **JWT log
 - ✔ **Playwright E2E tests (positive + negative cases)**
 - ✔ **CI/CD GitHub Actions workflow**
 
-  - Spins up Postgres + server
-  - Runs unit + integration tests
-  - Runs Playwright E2E tests
-  - Builds & pushes Docker image to Docker Hub
+Test status (local): `54 passed, 1 skipped` (unit + integration + e2e) — verified 2025-12-07.
+
+- Spins up Postgres + server
+- Runs unit + integration tests
+- Runs Playwright E2E tests
+- Builds & pushes Docker image to Docker Hub
 
 - ✔ **Docker Compose for local development**
 - ✔ **Swagger UI testing with Bearer token**

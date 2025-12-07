@@ -21,11 +21,22 @@
     /* match register: full-bleed purple background, no white frame */
     .page-frame{ max-width:980px; margin:0 auto; background:transparent; border-radius:0; padding:28px 0; box-shadow:none; }
     .container { width:100%; max-width:920px; margin: 0 auto; }
-    .card { background-color:#1e1e20; border:1px solid #333333; border-radius:12px; padding:24px; margin-bottom:24px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.5); }
+    .card { background-color:#1e1e20; border:1px solid #333333; border-radius:12px; padding:24px; margin-bottom:24px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.5); transition:transform .18s, box-shadow .18s }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
     h1 { color:#ffffff; font-weight:700; margin:0 0 12px 0; }
     label { display:block; font-size:0.85rem; color:#a1a1aa; margin-bottom:6px; margin-top:10px }
-    input[type="text"], input[type="password"] { width:100%; background-color:#121212; border:1px solid #3f3f46; color:#ffffff; padding:12px; border-radius:8px; font-size:0.95rem; box-sizing:border-box; transition: border-color .2s }
-    input:focus { border-color:#a855f7; outline:none }
+    input[type="text"], input[type="password"] { width:100%; background-color:#121212; border:1px solid #3f3f46; color:#ffffff; padding:12px; border-radius:8px; font-size:0.95rem; box-sizing:border-box; transition: border-color .18s, box-shadow .18s }
+    input:focus { border-color:#a855f7; outline:none; box-shadow: 0 6px 18px rgba(168,85,247,0.08) }
+
+    /* table / row hover (not used here but keeps style parity) */
+    tr:hover td { background: rgba(255,255,255,0.01); }
+
+    /* pill styles (keeps consistent with calculations page) */
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; font-size:0.8rem; font-weight:600 }
+    .pill-add{background:#e6ffef;color:#047857}
+    .pill-subtract{background:#fff7ed;color:#92400e}
+    .pill-multiply{background:#eef2ff;color:#3730a3}
+    .pill-divide{background:#fff0f6;color:#831843}
     .btn { padding:10px 20px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:0.9rem; margin-top:15px; margin-right:10px; transition:background .2s }
     .btn-primary { background-color:#a855f7; color:#fff }
     .btn-secondary { background-color:#3f3f46; color:#fff }
@@ -54,9 +65,37 @@
     </div>
   </div>
 
-  <script>
+    <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+    <script>
     const form = document.getElementById('loginForm');
     const msg = document.getElementById('msg');
+
+      // small toast helper (used to show registration success popup)
+      function showToast(text, type){
+        let wrap = document.getElementById('toastWrap');
+        if (!wrap) {
+          wrap = document.createElement('div'); wrap.id = 'toastWrap'; document.body.appendChild(wrap);
+        }
+        const el = document.createElement('div');
+        el.className = 'toast' + (type?(' '+type):'');
+        el.innerText = text;
+        el.style.cssText = 'background:#111; color:#fff; padding:10px 14px; border-radius:8px; margin:10px; display:inline-block; box-shadow:0 6px 18px rgba(0,0,0,0.5);';
+        wrap.appendChild(el);
+        setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(6px)'; setTimeout(()=>wrap.removeChild(el),300) }, 2600);
+      }
+
+      // if redirected from registration, show an informational popup
+      (function checkRegisteredParam(){
+        try{
+          const p = new URLSearchParams(window.location.search);
+          if (p.get('registered')){
+            showToast('Account registered — login to use the calculator', 'success');
+            // remove the query param so it doesn't show again on reload
+            history.replaceState(null, '', window.location.pathname);
+          }
+        }catch(e){ }
+      })();
 
     function showError(text) {
       msg.innerText = text;
@@ -89,7 +128,12 @@
           const data = await res.json();
           // store token for use in later authenticated requests
           localStorage.setItem('token', data.access_token);
-          showSuccess('Login successful. Token stored in localStorage.');
+          // mark that we should prompt the user to copy the token on the calculations page
+          localStorage.setItem('showTokenDialog', '1');
+          // show a success message briefly so E2E tests can detect it, then redirect
+          showSuccess('Login successful');
+          setTimeout(()=>{ window.location.href = '/calculations'; }, 400);
+          return;
         } else if (res.status === 401) {
           showError('Invalid credentials.');
         } else {
@@ -99,6 +143,65 @@
       } catch (err) {
         showError('Network error');
       }
+    });
+
+    
+
+    // Forgot password flow: open a small modal to enter email and show confirmation
+    const forgotLink = document.createElement('a');
+    forgotLink.href = '#';
+    forgotLink.id = 'forgotLink';
+    forgotLink.innerText = 'Forgot password?';
+    forgotLink.style.color = '#a855f7';
+    forgotLink.style.marginLeft = '12px';
+    forgotLink.style.display = 'inline-block';
+    // place the link directly after the Login button inside the form
+    const loginBtnElem = form.querySelector('button[type="submit"]');
+    if (loginBtnElem && loginBtnElem.parentNode) {
+      loginBtnElem.insertAdjacentElement('afterend', forgotLink);
+    } else {
+      form.parentNode.appendChild(forgotLink);
+    }
+
+    forgotLink.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      // build modal
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:9999;backdrop-filter: blur(3px);';
+      const box = document.createElement('div');
+      box.style.cssText = 'background:#111827;color:#fff;padding:18px;border-radius:8px;max-width:520px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.6);';
+      box.innerHTML = `<h3 style="margin:0 0 8px 0">Forgot password</h3>
+        <p style="margin:0 0 10px 0;color:#cbd5e1">Enter your account email and we'll send a reset link (demo).</p>
+        <input id="_fpEmail" type="email" placeholder="you@example.com" style="width:100%;padding:10px;border-radius:6px;border:1px solid #374151;background:#0b0b0b;color:#fff;margin-bottom:10px" />
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button id="_fpCancel" style="background:#374151;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer">Cancel</button>
+          <button id="_fpSend" style="background:#a855f7;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer">Send</button>
+        </div>`;
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      const cancel = document.getElementById('_fpCancel');
+      const send = document.getElementById('_fpSend');
+      const emailInput = document.getElementById('_fpEmail');
+
+      cancel.addEventListener('click', ()=>{ document.body.removeChild(overlay); });
+      send.addEventListener('click', async ()=>{
+        const email = emailInput.value.trim();
+        if (!email || !/@/.test(email)) { showToast('Enter a valid email', ''); return; }
+        try{
+          // try calling backend endpoint if present, otherwise show generic message
+          const res = await fetch('/forgot-password', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email }) });
+          if (res.ok) {
+            showToast('If an account exists, a reset link was sent', 'success');
+          } else {
+            showToast('If an account exists, a reset link was sent', 'success');
+          }
+        }catch(e){
+          // network or endpoint not present — still show helpful message
+          showToast('If an account exists, a reset link was sent', 'success');
+        }
+        document.body.removeChild(overlay);
+      });
     });
   </script>
 </body>
