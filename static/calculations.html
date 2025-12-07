@@ -5,94 +5,69 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Calculations - FastAPI Calculator</title>
   <style>
-    <style>
-      /* Dark & Sleek theme (from user) */
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-      body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        color: #e4e4e7;
-        margin: 0;
-        padding: 40px;
-        min-height: 100vh;
-        /* OPTION 1: Midnight Purple Glow (Matches your buttons) */
-        background-color: #09090b;
-        background-image: radial-gradient(circle at 50% 0%, #2e1065, #09090b 80%);
-        /* OPTION 2: Neutral Spotlight (Pure Grey/Black) If you prefer Option 2, uncomment the line below and comment out Option 1 */
-        /* background-image: radial-gradient(circle at 50% 0%, #27272a, #09090b 80%); */
-      }
+    /* Dark & Sleek — full-bleed matte background and narrow centered column */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #e4e4e7;
+      margin: 0;
+      padding: 40px;
+      min-height: 100vh;
+      /* Midnight Purple Glow to match register */
+      background-color: #09090b;
+      background-image: radial-gradient(circle at 50% 0%, #2e1065, #09090b 80%);
+      display:flex;justify-content:center;
+    }
 
-      h1, h2, h3 { color: #ffffff; font-weight: 700; margin-top: 0; }
-      h1 { margin-bottom: 10px; }
-      p { color: #a1a1aa; margin-top: 0; }
+    /* Narrow mobile-app style container */
+    .main-container { width:100%; max-width:760px; }
+    .container { width:100%; max-width:760px; }
 
-      /* Page frame (white column) and container sizing */
-      .page-frame{ max-width:760px; margin:0 auto; background:#ffffff; border-radius:12px; padding:28px; box-shadow:0 18px 50px rgba(15,23,42,0.08); }
-    
-    
-      /* Keep existing container name as alias for main-container */
-      .main-container { max-width: 920px; margin: 0 auto; }
-      .container { width:100%; max-width:920px; margin: 0 auto; }
+    h1 { color:#ffffff; font-size:1.6rem; margin:0 0 6px 0 }
+    p.small-muted { color: #71717a; margin:0 0 14px 0 }
 
-      .card {
-          background-color: #1e1e20;
-          border: 1px solid #333333;
-         border-radius: 14px;
-          padding: 24px;
-         padding: 28px;
-          margin-bottom: 24px;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
-         box-shadow: 0 6px 18px rgba(0,0,0,0.45);
-      }
+    .card {
+      background-color: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+    }
 
-      label { display:block; font-size:0.85rem; color:#a1a1aa; margin-bottom:6px; margin-top:10px }
+    .card h2 { color:#ffffff; margin:0 0 12px 0; font-size:1.05rem }
 
-      input[type="text"], input[type="number"], select {
-          width:100%; background-color:#121212; border:1px solid #3f3f46; color:#ffffff; padding:12px; border-radius:8px; font-size:0.95rem; box-sizing:border-box; transition: border-color .2s;
-      }
-      input:focus, select:focus { border-color:#a855f7; outline:none }
+    label { display:block; font-size:0.85rem; color:#a1a1aa; margin-bottom:6px }
+    input[type="text"], input[type="number"], select { width:100%; background:#18181b; border:1px solid #3f3f46; color:#fff; padding:12px; border-radius:8px; margin-bottom:12px }
+    input:focus, select:focus { outline:none; border-color:#a855f7 }
 
-      .token-display { background-color:#27272a; padding:10px; border-radius:6px; font-family:monospace; color:#a1a1aa; word-break:break-all; font-size:0.85rem; margin-bottom:15px }
+    .token-display, .token-bar .token-show { background:#3f3f46; color:#e4e4e7; padding:8px 10px; border-radius:6px; font-family:monospace; display:inline-block }
 
-      .form-row { display:flex; gap:15px; align-items:flex-end }
-      .form-row .form-group { flex:1 }
-      @media(max-width:780px){ .form-row{ flex-direction:column } }
+    .form-row{display:flex;gap:12px}
+    .form-row.three > div{flex:1}
+    @media(max-width:520px){ .form-row{flex-direction:column} }
 
-      .btn { padding:10px 20px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:0.9rem; margin-top:15px; margin-right:10px; transition:background .2s }
-      .btn-primary { background-color:#a855f7; color:#fff }
-      .btn-primary:hover { background-color:#9333ea }
-      .btn-secondary { background-color:#3f3f46; color:#fff }
-      .btn-secondary:hover { background-color:#52525b }
-      .btn-danger { background-color:#f43f5e; color:#fff; padding:8px 12px; margin:0 }
-      .btn-danger:hover { background-color:#e11d48 }
+    .btn{background:#a855f7;color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer}
+    .btn-secondary{background:#3f3f46;color:#fff;border-radius:8px;padding:10px 12px}
+    .btn-danger{background:#ef4444;color:#fff;padding:8px;border-radius:6px}
 
-      table { width:100%; border-collapse:collapse; margin-top:10px; font-size:0.9rem }
-      th { text-align:left; color:#e4e4e7; padding:12px; border-bottom:1px solid #3f3f46; background-color:#27272a }
-      td { padding:12px; border-bottom:1px solid #333333; color:#d4d4d8 }
-      tr:last-child td { border-bottom:none }
-      td:last-child, th:last-child { text-align:center }
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:13px;font-weight:600}
+    .pill-add{background:#e6ffef;color:#047857}
+    .pill-subtract{background:#fff7ed;color:#92400e}
+    .pill-multiply{background:#eef2ff;color:#3730a3}
+    .pill-divide{background:#fff0f6;color:#831843}
 
-      /* pill badges for operation types retained */
-      .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:13px;font-weight:600}
-      .pill-add{background:#e6ffef;color:#047857}
-      .pill-subtract{background:#fff7ed;color:#92400e}
-      .pill-multiply{background:#eef2ff;color:#3730a3}
-      .pill-divide{background:#fff0f6;color:#831843}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:8px;text-align:left;color:#d4d4d8}
+    .actions button{margin-left:6px}
 
-      /* toast (keep simple) */
-      .toast-wrap{position:fixed;right:20px;bottom:20px;z-index:1200}
-      .toast{background:#111;color:#fff;padding:8px 12px;border-radius:8px;margin-top:8px;opacity:0;transform:translateY(6px);animation:toast-in .25s forwards}
-      .toast.success{background:#0a8f3a}
-      .toast.error{background:#b00020}
-      @keyframes toast-in{to{opacity:1;transform:translateY(0)}}
-
-      .muted{color:#a1a1aa;font-size:13px}
-      .msg{margin-top:8px;font-size:14px}
-      .actions button{margin-right:6px;padding:6px 8px;border-radius:6px;font-size:16px}
-    </style>
+    .muted{color:#a1a1aa;font-size:13px}
+    .msg{margin-top:8px;font-size:14px;color:#e4e4e7}
+  </style>
 </head>
 <body>
-  <div class="page-frame">
-    <div class="container">
+  <div class="page-frame" style="background:transparent;padding:0">
+    <div class="container main-container">
     <h1>Calculations (BREAD)</h1>
     <p class="small-muted">Manage your calculations securely using your token.</p>
 
