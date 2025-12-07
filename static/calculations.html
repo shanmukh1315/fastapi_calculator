@@ -500,8 +500,10 @@
             }
           });
           closeBtn.addEventListener('click', ()=>{ document.body.removeChild(overlay); });
-          // Auto-close the copy dialog shortly after showing so it doesn't block automated tests
-          setTimeout(()=>{ try{ if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }catch(e){} }, 600);
+          // Auto-close the copy dialog after a reasonable interval so users can copy it,
+          // but tests won't be blocked. Keep it visible longer (6s) so it doesn't vanish
+          // immediately during manual use.
+          setTimeout(()=>{ try{ if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }catch(e){} }, 6000);
         }
       }catch(e){ }
     })();
