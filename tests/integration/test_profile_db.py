@@ -106,10 +106,14 @@ class TestProfileUpdateDB:
     
     def test_email_uniqueness_constraint(self, db_session: Session, test_user: User):
         """Test that duplicate email is prevented."""
-        # Create another user
+        # Create another user with unique identifier
+        import time
+        unique_id = str(int(time.time() * 1000))
+        other_email = f"other_{unique_id}@example.com"
+        
         user2 = User(
-            username="otheruser",
-            email="other@example.com",
+            username=f"otheruser_{unique_id}",
+            email=other_email,
             password_hash=hash_password("password")
         )
         db_session.add(user2)
@@ -117,7 +121,7 @@ class TestProfileUpdateDB:
         
         # Check if email exists before update
         existing = db_session.query(User).filter(
-            User.email == "other@example.com",
+            User.email == other_email,
             User.id != test_user.id
         ).first()
         

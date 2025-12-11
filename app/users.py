@@ -10,13 +10,18 @@ router = APIRouter()
 def get_current_user(db: Session, request: Request):
     """Extract user from JWT token in Authorization header."""
     from app.security import decode_access_token
+    from jose import JWTError
     
     auth = request.headers.get("authorization")
     if not auth or not auth.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="Missing token")
     
     token = auth.split(" ", 1)[1]
-    payload = decode_access_token(token)
+    try:
+        payload = decode_access_token(token)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
     user_id = int(payload.get("sub"))
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
