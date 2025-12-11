@@ -21,7 +21,8 @@
     /* remove white framed board for a full-bleed dark background */
     .page-frame{ max-width:980px; margin:0 auto; background:transparent; border-radius:0; padding:28px 0; box-shadow:none; }
     .container { width:100%; max-width:920px; margin: 0 auto; }
-    .card { background-color:#1e1e20; border:1px solid #333333; border-radius:12px; padding:24px; margin-bottom:24px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.5); }
+    .card { background-color:#1e1e20; border:1px solid #333333; border-radius:12px; padding:24px; margin-bottom:24px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.5); transition:transform .18s, box-shadow .18s }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
     h1 { color:#ffffff; font-weight:700; margin:0 0 12px 0; }
     label { display:block; font-size:0.85rem; color:#a1a1aa; margin-bottom:6px; margin-top:10px }
     input[type="text"], input[type="email"], input[type="password"] { width:100%; background-color:#121212; border:1px solid #3f3f46; color:#ffffff; padding:12px; border-radius:8px; font-size:0.95rem; box-sizing:border-box; transition: border-color .2s }
@@ -34,9 +35,26 @@
     .msg{margin-top:8px;font-size:14px;color:#e4e4e7}
     @media(max-width:480px){ .card{ padding:20px } }
     a.accent{ color:#a855f7; text-decoration:none }
+    /* Theme overrides: supports light theme via body[data-theme="light"] */
+    body[data-theme="light"]{
+      background-color: #f3f4f6;
+      background-image: radial-gradient(circle at 50% 0%, #eef2ff, #f3f4f6 80%);
+      color: #0f172a;
+    }
+    body[data-theme="light"] .card{ background:#ffffff; border:1px solid #e6e6e9; color:#0f172a }
+    body[data-theme="light"] input[type="text"], body[data-theme="light"] input[type="email"], body[data-theme="light"] input[type="password"]{ background:#ffffff; color:#0f172a; border:1px solid #d1d5db }
+    body[data-theme="light"] .btn-primary{ background:#7c3aed; color:#fff }
+    body[data-theme="light"] .btn-secondary{ background:#e5e7eb; color:#0f172a }
+    body[data-theme="light"] .muted{ color:#6b7280 }
+    /* Ensure readable text in light mode */
+    body[data-theme="light"] .msg, body[data-theme="light"] h1, body[data-theme="light"] h2, body[data-theme="light"] p, body[data-theme="light"] th, body[data-theme="light"] td, body[data-theme="light"] .pill, body[data-theme="light"] .toast, body[data-theme="light"] .token-show { color: #0f172a !important; }
+    body[data-theme="light"] input::placeholder, body[data-theme="light"] textarea::placeholder { color: #6b7280; opacity:1 }
   </style>
 </head>
 <body>
+  <div style="position:fixed;right:24px;top:18px;z-index:999">
+    <button id="themeToggle" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit;padding:8px 10px;border-radius:8px;cursor:pointer">🌙</button>
+  </div>
   <div class="page-frame">
     <div class="container">
       <div class="card">
@@ -64,6 +82,23 @@
   <script>
     const form = document.getElementById('registerForm');
     const msg = document.getElementById('msg');
+
+    // Theme toggle: persist in localStorage
+    (function setupTheme(){
+      try{
+        const btn = document.getElementById('themeToggle');
+        const stored = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', stored);
+        function updateBtn(){ btn.innerText = document.body.getAttribute('data-theme') === 'dark' ? '🌙' : '☀️'; }
+        updateBtn();
+        btn.addEventListener('click', ()=>{
+          const cur = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          document.body.setAttribute('data-theme', cur);
+          localStorage.setItem('theme', cur);
+          updateBtn();
+        });
+      }catch(e){}
+    })();
 
     function showError(text) {
       msg.innerText = text;
@@ -102,9 +137,10 @@
         });
 
         if (res.ok) {
-          // registration succeeded — show success message and keep user on page
+          // registration succeeded — show success message and then redirect to login
           showSuccess('Registered successfully');
-          // keep the message visible briefly so tests/users see it
+          // redirect to login with flag so the login page can show an informational message
+          setTimeout(() => { window.location.href = '/login?registered=1'; }, 500);
           return;
         } else {
           const err = await res.json();

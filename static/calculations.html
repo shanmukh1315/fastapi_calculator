@@ -4,41 +4,39 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Calculations - FastAPI Calculator</title>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-    
-    /* 1. Global Reset & Body (Matches Login/Register) */
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #e4e4e7;
       margin: 0;
       padding: 40px;
       min-height: 100vh;
-      /* Background matches Login exactly */
       background-color: #09090b;
       background-image: radial-gradient(circle at 50% 0%, #2e1065, #09090b 80%);
       display: flex;
-      justify-content: center; /* Centers the column */
+      justify-content: center;
     }
 
-    /* 2. Layout Containers (Matches Login widths) */
-    .page-frame { 
-        max-width: 980px; 
-        width: 100%;
-        margin: 0 auto; 
-        background: transparent; 
-        padding: 0; 
+    .page-frame {
+      max-width: 980px;
+      width: 100%;
+      margin: 0 auto;
+      background: transparent;
+      padding: 0;
+      position: relative;
     }
-    .container { 
-        width: 100%; 
-        max-width: 920px; /* Aligns with Login container width */
-        margin: 0 auto; 
+    .container {
+      width: 100%;
+      max-width: 920px;
+      margin: 0 auto;
     }
 
-    /* 3. Card Styling (Updated to #1e1e20 to match Login) */
     .card {
-      background-color: #1e1e20; /* Darker grey like Login */
-      border: 1px solid #333333; /* Darker border like Login */
+      background-color: #1e1e20;
+      border: 1px solid #333333;
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 24px;
@@ -47,114 +45,289 @@
     }
     .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
 
-    /* 4. Typography & Headers */
     h1 { color: #ffffff; font-weight: 700; font-size: 1.8rem; margin: 0 0 10px 0; }
     h2 { color: #ffffff; font-weight: 600; font-size: 1.1rem; margin: 0 0 15px 0; }
     p.small-muted { color: #a1a1aa; margin: 0 0 20px 0; font-size: 0.9rem; }
 
-    /* 5. Inputs (Updated to #121212 to match Login) */
     label { display: block; font-size: 0.85rem; color: #a1a1aa; margin-bottom: 6px; margin-top: 10px; }
-    
-    input[type="text"], input[type="number"], select { 
-      width: 100%; 
-      background-color: #121212; /* Darker input bg like Login */
-      border: 1px solid #3f3f46; 
-      color: #ffffff; 
-      padding: 12px; 
-      border-radius: 8px; 
-      font-size: 0.95rem; 
-      box-sizing: border-box; 
-      transition: border-color .18s, box-shadow .18s; 
+
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      background-color: #121212;
+      border: 1px solid #3f3f46;
+      color: #ffffff;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+      transition: border-color .18s, box-shadow .18s;
     }
     input:focus, select:focus { border-color: #a855f7; outline: none; box-shadow: 0 6px 18px rgba(168,85,247,0.12); }
 
-    /* 6. Buttons (Matches Login) */
-    .btn { 
-        padding: 10px 20px; 
-        border-radius: 8px; 
-        border: none; 
-        cursor: pointer; 
-        font-weight: 600; 
-        font-size: 0.9rem; 
-        margin-top: 10px; 
-        margin-right: 10px; 
-        transition: background .2s; 
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-top: 10px;
+      margin-right: 10px;
+      transition: background .2s;
     }
     .btn-primary { background-color: #a855f7; color: #fff; }
     .btn-secondary { background-color: #3f3f46; color: #fff; }
     .btn-danger { background-color: #ef4444; color: #fff; padding: 8px 12px; font-size: 0.85rem; }
 
-    /* Calculator Specific Styles (Layout for horizontal inputs) */
     .form-row { display: flex; gap: 15px; align-items: flex-end; }
     .form-row > div { flex: 1; }
     @media(max-width: 600px){ .form-row { flex-direction: column; align-items: stretch; } }
 
-    /* Table Styling */
     table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
     th { text-align: left; color: #a1a1aa; padding: 10px; border-bottom: 1px solid #333333; }
     td { padding: 10px; border-bottom: 1px solid #333333; color: #e4e4e7; }
-    tr:hover td { background: rgba(255,255,255,0.01); }
     tr:last-child td { border-bottom: none; }
-    
-    /* Token & Messages */
-    .token-show { background: #121212; border: 1px solid #333; color: #a1a1aa; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.8rem; }
+
+    .token-show {
+      display:inline-block; background: #0b0b0b; border: 1px solid #222; color: #e6e6e6;
+      padding: 6px 10px; border-radius: 8px; font-family: monospace; font-size: 0.85rem;
+    }
+    .form-input {
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #333;
+      background:#0f0f10; color:#fff; box-sizing:border-box;
+    }
     .muted { color: #a1a1aa; font-size: 13px; }
     .msg { margin-top: 8px; font-size: 14px; color: #e4e4e7; }
 
-    /* Pills */
     .pill { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
     .pill-add { background: rgba(16, 185, 129, 0.2); color: #34d399; }
     .pill-subtract { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
     .pill-multiply { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
     .pill-divide { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
-    
+    .pill-power { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+    .pill-modulus { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .pill-percent_of { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+    .pill-nth_root { background: rgba(14, 165, 233, 0.2); color: #0ea5e9; }
+    .pill-log_base { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+
+    .operation-hint { font-size: 0.8rem; color: #a1a1aa; margin-top: 4px; font-style: italic; }
+
     /* Toast */
-    .toast-wrap{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;pointer-events:none;z-index:999}
-    .toast{background:#1e1e20;border:1px solid #333;color:#e4e4e7;padding:12px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.5);opacity:1;transform:translateY(0);transition:all 0.3s ease;font-size:0.9rem}
+    .toast-wrap{
+      position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;
+      gap:10px;pointer-events:none;z-index:999
+    }
+    .toast{
+      background:#1e1e20;border:1px solid #333;color:#e4e4e7;padding:12px 24px;
+      border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.5);
+      transition:all 0.3s ease;font-size:0.9rem
+    }
     .toast.success{border-left:4px solid #a855f7}
+
+    /* Top bars */
+    .top-left-bar{
+      position: fixed;
+      left: 24px;
+      top: 18px;
+      z-index: 1000;
+    }
+    .top-right-bar{
+      position: fixed;
+      right: 24px;
+      top: 18px;
+      z-index: 1000;
+    }
+
+    /* Account dropdown/dialog */
+    .account-menu{
+      position: fixed;
+      left: 24px;
+      top: 58px;
+      z-index: 1001;
+      display:none;
+      min-width: 210px;
+      padding: 12px;
+      background: #1e1e20;
+      border: 1px solid #333;
+      border-radius: 12px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+    }
+    .account-name{ font-weight:600; font-size:0.95rem; margin-bottom:2px; }
+    .account-email{ font-size:0.8rem; color:#a1a1aa; margin-bottom:10px; }
+    .account-menu .btn{ width: 100%; margin: 6px 0 0 0; }
+
+    /* Light theme */
+    body[data-theme="light"]{
+      background-color: #f3f4f6;
+      background-image: radial-gradient(circle at 50% 0%, #eef2ff, #f3f4f6 80%);
+      color: #0f172a;
+    }
+    body[data-theme="light"] .card{ background:#ffffff; border:1px solid #e6e6e9; color:#0f172a }
+    body[data-theme="light"] input[type="text"], 
+    body[data-theme="light"] input[type="number"], 
+    body[data-theme="light"] select{ background:#ffffff; color:#0f172a; border:1px solid #d1d5db }
+    body[data-theme="light"] .btn-primary{ background:#7c3aed; color:#fff }
+    body[data-theme="light"] .btn-secondary{ background:#e5e7eb; color:#0f172a }
+    body[data-theme="light"] .muted{ color:#6b7280 }
+    body[data-theme="light"] th, 
+    body[data-theme="light"] td, 
+    body[data-theme="light"] h1, 
+    body[data-theme="light"] h2, 
+    body[data-theme="light"] p { color:#0f172a !important; }
+    body[data-theme="light"] .toast{ background:#ffffff;border:1px solid #e6e6e9;color:#0f172a !important; }
+    body[data-theme="light"] .token-show{ background:#f8fafc;border:1px solid #e6e6e9;color:#0f172a !important; }
+
+    body[data-theme="light"] .account-menu{
+      background:#ffffff;border:1px solid #e6e6e9;color:#0f172a;
+    }
+    body[data-theme="light"] .account-email{ color:#6b7280; }
+    body[data-theme="light"] select{ background:#ffffff; color:#0f172a; border:1px solid #d1d5db; }
+
+    /* Export Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: #1e1e20;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      animation: modalSlideIn 0.2s ease;
+    }
+    @keyframes modalSlideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .modal-subtext {
+      font-size: 0.85rem;
+      color: #a1a1aa;
+      margin-bottom: 20px;
+    }
+    .export-option {
+      background: #2a2a2c;
+      border: 2px solid #3f3f46;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .export-option:hover {
+      border-color: #a855f7;
+      background: #2e2a35;
+    }
+    .export-icon {
+      font-size: 1.8rem;
+      width: 40px;
+      text-align: center;
+    }
+    .export-info h3 {
+      margin: 0 0 4px 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .export-info p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #a1a1aa;
+    }
+    .modal-footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    body[data-theme="light"] .modal-content {
+      background: #ffffff;
+      border: 1px solid #e6e6e9;
+    }
+    body[data-theme="light"] .export-option {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+    body[data-theme="light"] .export-option:hover {
+      border-color: #7c3aed;
+      background: #f3f4f6;
+    }
   </style>
 </head>
+
 <body>
+  <!-- TOP LEFT ACCOUNT BUTTON -->
+  <div class="top-left-bar">
+    <button id="accountBtnMain" class="btn btn-secondary"
+      style="font-weight:600;padding:8px 18px;border-radius:8px;margin-top:0;">
+      Account
+    </button>
+  </div>
+
+  <!-- ACCOUNT DROPDOWN -->
+  <div id="accountMenu" class="account-menu">
+    <div class="account-name" id="accountName">—</div>
+    <div class="account-email" id="accountEmail">—</div>
+    <button id="profileBtn" class="btn btn-primary" type="button">Profile</button>
+    <button id="logoutBtnAccount" class="btn btn-secondary" type="button">Logout</button>
+  </div>
+
+  <!-- TOP RIGHT THEME -->
+  <div class="top-right-bar">
+    <button id="themeToggle"
+      style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit;
+             padding:8px 10px;border-radius:8px;cursor:pointer">
+      🌙
+    </button>
+  </div>
 
   <div class="page-frame">
     <div class="container">
-      
       <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:8px">
         <div>
           <h1>Calculations (BREAD)</h1>
           <p class="small-muted">Manage your calculations securely using your token.</p>
         </div>
-        <div>
-          <button id="logoutBtnCalc" class="btn btn-secondary" style="display:none">Logout</button>
-        </div>
       </div>
 
+      <!-- Token Card -->
       <div class="card" id="auth">
         <h2>Token</h2>
         <div style="margin-bottom:15px">
-            <span class="muted">Current Token: </span>
-            <span class="token-show" id="tokenShow">(not set)</span>
-        </div>
-        <label>Paste token (or use login page to store it):</label>
-        <input id="tokenInput" type="text" placeholder="Paste raw token here" />
-        <div style="margin-top:10px">
-          <button id="setToken" class="btn btn-primary">Set Token</button>
-          <button id="clearToken" class="btn btn-secondary">Clear</button>
-          <span id="authMsg" class="muted" style="margin-left:12px"></span>
+          <span class="muted">Current Token: </span>
+          <span class="token-show" id="tokenShow">(not set)</span>
         </div>
       </div>
 
-      
-
+      <!-- Create/Edit -->
       <div class="card">
         <h2>Create / Edit Calculation</h2>
         <form id="calcForm" novalidate>
           <input type="hidden" id="calcId" />
-          
+
           <div class="form-row">
             <div>
               <label>Operand A</label>
-              <input id="a" type="number" step="any" required placeholder="10" />
+              <input id="a" type="number" step="any" required placeholder="Enter number" />
             </div>
             <div>
               <label>Operation</label>
@@ -163,16 +336,26 @@
                 <option value="subtract">subtract (-)</option>
                 <option value="multiply">multiply (*)</option>
                 <option value="divide">divide (/)</option>
+                <option value="power">power (^)</option>
+                <option value="modulus">modulus (%)</option>
+                <option value="percent_of">percent of</option>
+                <option value="nth_root">nth root (√)</option>
+                <option value="log_base">logarithm (log)</option>
               </select>
+              <div id="operationHint" class="operation-hint"></div>
             </div>
             <div>
               <label>Operand B</label>
-              <input id="b" type="number" step="any" required placeholder="5" />
+              <input id="b" type="number" step="any" required placeholder="Enter number" />
             </div>
           </div>
 
           <div id="formMsg" class="msg"></div>
-          
+
+          <div id="livePreview" style="margin-top:10px;color:#cbd5e1;font-size:0.95rem">
+            Preview: <span id="previewText">—</span>
+          </div>
+
           <div style="margin-top:15px">
             <button id="submitBtn" class="btn btn-primary" type="submit">Create</button>
             <button id="cancelEdit" type="button" class="btn btn-secondary" style="display:none;">Cancel</button>
@@ -180,10 +363,11 @@
         </form>
       </div>
 
+      <!-- History -->
       <div class="card">
         <h2>History</h2>
         <div id="listMsg" class="muted"></div>
-        <!-- Quick Stats: Total / Last Result / Top Type (moved below Create/Edit) -->
+
         <div class="form-row three" style="margin-bottom:16px; margin-top:12px;">
           <div class="card" style="margin-bottom:0; padding:14px; text-align:center;">
             <div class="muted" style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Total</div>
@@ -198,27 +382,72 @@
             <div id="statType" style="font-size:1.4rem; font-weight:700; color:#34d399; margin-top:6px;">-</div>
           </div>
         </div>
+
+        <!-- Detailed Statistics -->
+        <div id="detailedStats" class="card" style="margin-bottom:16px; margin-top:0;">
+          <h2 style="margin-bottom:16px;"> Detailed Statistics</h2>
+          
+          <div class="form-row" style="margin-bottom:16px;">
+            <div class="card" style="margin-bottom:0; padding:12px; text-align:center; flex:1;">
+              <div class="muted" style="font-size:0.7rem;">Avg Operand A</div>
+              <div id="statAvgA" style="font-size:1.1rem; font-weight:600; color:#60a5fa; margin-top:4px;">-</div>
+            </div>
+            <div class="card" style="margin-bottom:0; padding:12px; text-align:center; flex:1;">
+              <div class="muted" style="font-size:0.7rem;">Avg Operand B</div>
+              <div id="statAvgB" style="font-size:1.1rem; font-weight:600; color:#60a5fa; margin-top:4px;">-</div>
+            </div>
+            <div class="card" style="margin-bottom:0; padding:12px; text-align:center; flex:1;">
+              <div class="muted" style="font-size:0.7rem;">Avg Result</div>
+              <div id="statAvgResult" style="font-size:1.1rem; font-weight:600; color:#60a5fa; margin-top:4px;">-</div>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-bottom:12px;">
+            <div class="card" style="margin-bottom:0; padding:12px; text-align:center; flex:1;">
+              <div class="muted" style="font-size:0.7rem;">Min Result</div>
+              <div id="statMinResult" style="font-size:1.1rem; font-weight:600; color:#f87171; margin-top:4px;">-</div>
+            </div>
+            <div class="card" style="margin-bottom:0; padding:12px; text-align:center; flex:1;">
+              <div class="muted" style="font-size:0.7rem;">Max Result</div>
+              <div id="statMaxResult" style="font-size:1.1rem; font-weight:600; color:#34d399; margin-top:4px;">-</div>
+            </div>
+          </div>
+
+          <div id="operationsBreakdown" style="margin-top:16px;">
+            <div class="muted" style="font-size:0.8rem; margin-bottom:8px; font-weight:600;">Operations Breakdown:</div>
+            <div id="operationsChart" style="display:flex; flex-direction:column; gap:6px;">
+              <!-- Will be populated by JS -->
+            </div>
+          </div>
+        </div>
+
         <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center;">
-          <input id="searchInput" type="text" placeholder="Search by ID or Result..." style="margin-bottom:0; flex:1; padding:10px; border-radius:8px; border:1px solid #333; background:#0f0f10; color:#fff" />
-          <select id="filterType" style="margin-bottom:0; width:150px; padding:10px; border-radius:8px; background:#0f0f10; color:#fff; border:1px solid #333">
+          <input id="searchInput" class="form-input" type="text" placeholder="Search by ID or Result..." style="margin-bottom:0; flex:1;" />
+          <select id="filterType" class="form-input" style="margin-bottom:0; width:150px; padding:10px; border-radius:8px;">
             <option value="all">All Types</option>
             <option value="add">Add</option>
             <option value="subtract">Subtract</option>
             <option value="multiply">Multiply</option>
             <option value="divide">Divide</option>
+            <option value="power">Power</option>
+            <option value="modulus">Modulus</option>
+            <option value="percent_of">Percent Of</option>
+            <option value="nth_root">Nth Root</option>
+            <option value="log_base">Logarithm</option>
           </select>
-          <button id="exportBtn" class="btn btn-secondary" style="margin-left:6px">Export JSON</button>
+          <button id="exportBtn" class="btn btn-secondary" style="margin-left:6px">Export</button>
         </div>
+
         <table id="calcTable">
           <thead>
-              <tr>
-                  <th>ID</th>
-                  <th>A</th>
-                  <th>Type</th>
-                  <th>B</th>
-                  <th>Result</th>
-                  <th style="text-align:right">Actions</th>
-              </tr>
+            <tr>
+              <th>ID</th>
+              <th>A</th>
+              <th>Type</th>
+              <th>B</th>
+              <th>Result</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -227,46 +456,49 @@
     </div>
   </div>
 
+  <!-- Export Modal -->
+  <div id="exportModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">Export Calculations</div>
+      <div class="modal-subtext">Choose your preferred export format</div>
+      
+      <div class="export-option" id="exportCSV">
+        <div class="export-icon">📊</div>
+        <div class="export-info">
+          <h3>CSV Format</h3>
+          <p>Spreadsheet-compatible file (.csv)</p>
+        </div>
+      </div>
+      
+      <div class="export-option" id="exportJSON">
+        <div class="export-icon">📋</div>
+        <div class="export-info">
+          <h3>JSON Format</h3>
+          <p>JavaScript Object Notation (.json)</p>
+        </div>
+      </div>
+      
+      <div class="export-option" id="exportPDF">
+        <div class="export-icon">📄</div>
+        <div class="export-info">
+          <h3>PDF Format</h3>
+          <p>Portable document file (.pdf)</p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button id="closeExportModal" class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-wrap" id="toastWrap"></div>
 
   <script>
+    // ----------------- Core helpers -----------------
     const tokenKey = 'token';
+
     const tokenShow = document.getElementById('tokenShow');
-    const tokenInput = document.getElementById('tokenInput');
-    const setTokenBtn = document.getElementById('setToken');
-    const clearTokenBtn = document.getElementById('clearToken');
-    const authMsg = document.getElementById('authMsg');
-    const authCard = document.getElementById('auth');
-    let currentData = [];
-
-    function showToken() {
-      const t = localStorage.getItem(tokenKey);
-      tokenShow.innerText = t ? (t.length > 20 ? t.slice(0, 16) + '...' : t) : '(not set)';
-      // keep the token card visible so users can paste or inspect tokens at any time
-      try{ if (authCard) authCard.style.display = 'block'; }catch(e){}
-      // update logout button visibility if present
-      try{ const logoutBtn = document.getElementById('logoutBtnCalc'); if (logoutBtn) logoutBtn.style.display = t ? 'inline-block' : 'none'; }catch(e){}
-    }
-    showToken();
-
-    setTokenBtn.addEventListener('click', () => {
-      const v = tokenInput.value.trim();
-      if (!v) return authMsg.innerText = 'Enter token';
-      localStorage.setItem(tokenKey, v);
-      tokenInput.value = '';
-      showToken();
-      authMsg.innerText = '';
-      showToast('Token set successfully', 'success');
-      loadList();
-    });
-
-    clearTokenBtn.addEventListener('click', () => {
-      localStorage.removeItem(tokenKey);
-      showToken();
-      authMsg.innerText = '';
-      showToast('Token cleared', '');
-      loadList();
-    });
 
     const form = document.getElementById('calcForm');
     const aEl = document.getElementById('a');
@@ -278,41 +510,221 @@
     const tableBody = document.querySelector('#calcTable tbody');
     const listMsg = document.getElementById('listMsg');
 
+    const accountBtnMain = document.getElementById('accountBtnMain');
+    const accountMenu = document.getElementById('accountMenu');
+    const accountName = document.getElementById('accountName');
+    const accountEmail = document.getElementById('accountEmail');
+    const profileBtn = document.getElementById('profileBtn');
+    const logoutBtnAccount = document.getElementById('logoutBtnAccount');
+
+    // canonical data copy used for stats/export/filter
+    let currentData = [];
+
     function authHeader() {
       const t = localStorage.getItem(tokenKey);
       return t ? { 'Authorization': 'Bearer ' + t } : {};
     }
 
+    function showToast(text, type){
+      const wrap = document.getElementById('toastWrap');
+      const el = document.createElement('div');
+      el.className = 'toast' + (type?(' '+type):'');
+      el.innerText = text;
+      wrap.appendChild(el);
+      setTimeout(()=>{ 
+        el.style.opacity='0'; 
+        el.style.transform='translateY(6px)'; 
+        setTimeout(()=>{ try{ wrap.removeChild(el); }catch(e){} },300);
+      }, 2200);
+    }
+
+    function showToken() {
+      const t = localStorage.getItem(tokenKey);
+      tokenShow.innerText = t ? (t.length > 20 ? t.slice(0, 16) + '...' : t) : '(not set)';
+    }
+
+    // ----------------- Theme toggle -----------------
+    (function setupTheme(){
+      try{
+        const btn = document.getElementById('themeToggle');
+        const stored = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', stored);
+        function updateBtn(){
+          btn.innerText = document.body.getAttribute('data-theme') === 'dark' ? '🌙' : '☀️';
+        }
+        updateBtn();
+        btn.addEventListener('click', ()=>{
+          const cur = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          document.body.setAttribute('data-theme', cur);
+          localStorage.setItem('theme', cur);
+          updateBtn();
+        });
+      }catch(e){}
+    })();
+
+    // ----------------- Account dropdown -----------------
+    async function loadAccountMenu() {
+      const t = localStorage.getItem(tokenKey);
+      if (!t) {
+        accountName.textContent = '(not logged in)';
+        accountEmail.textContent = '';
+        return;
+      }
+      try {
+        const res = await fetch('/api/users/me', { headers: { ...authHeader(), 'Accept': 'application/json' } });
+        if (!res.ok) {
+          accountName.textContent = '(unknown user)';
+          accountEmail.textContent = '';
+          return;
+        }
+        const u = await res.json();
+        accountName.textContent = u.username && u.username.trim() ? u.username : '(no username)';
+        accountEmail.textContent = u.email ?? '';
+      } catch (e) {
+        accountName.textContent = '(error)';
+        accountEmail.textContent = '';
+      }
+    }
+
+    accountBtnMain.addEventListener('click', (e) => {
+      e.stopPropagation();
+      loadAccountMenu();
+      accountMenu.style.display = accountMenu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (accountMenu.style.display === 'block' && !accountMenu.contains(e.target) && e.target !== accountBtnMain) {
+        accountMenu.style.display = 'none';
+      }
+    });
+
+    profileBtn.addEventListener('click', () => {
+      window.location.href = '/static/profile.html';
+    });
+
+    logoutBtnAccount.addEventListener('click', () => {
+      localStorage.removeItem(tokenKey);
+      showToken();
+      accountMenu.style.display = 'none';
+      showToast('Logged out', '');
+      setTimeout(() => window.location.href = '/login', 400);
+    });
+
+    // ----------------- Live preview -----------------
+    const previewText = document.getElementById('previewText');
+    const operationHint = document.getElementById('operationHint');
+    
+    function computePreview(){
+      msg.innerText = '';
+      const a = parseFloat(aEl.value);
+      const b = parseFloat(bEl.value);
+      const type = typeEl.value;
+
+      // Update operation hint
+      if (type === 'percent_of') {
+        operationHint.innerText = 'Example: "15% of 200" → a=15, b=200';
+      } else if (type === 'nth_root') {
+        operationHint.innerText = 'Example: "4th root of 16" → a=16, b=4';
+      } else if (type === 'log_base') {
+        operationHint.innerText = 'Example: "log base 2 of 8" → a=8, b=2';
+      } else {
+        operationHint.innerText = '';
+      }
+
+      if (isNaN(a) || isNaN(b)) { previewText.innerText = 'Enter numeric operands'; return; }
+      
+      // Validation
+      if (type === 'divide' && b === 0) { 
+        previewText.innerText = 'Division by 0 not allowed'; 
+        msg.innerText='Division by 0 not allowed'; 
+        return; 
+      }
+      if (type === 'modulus' && b === 0) { 
+        previewText.innerText = 'Modulus by 0 not allowed'; 
+        msg.innerText='Modulus by 0 not allowed'; 
+        return; 
+      }
+      if (type === 'nth_root') {
+        if (b <= 0) {
+          previewText.innerText = 'Root index must be positive';
+          msg.innerText = 'Root index (b) must be positive';
+          return;
+        }
+        if (b % 2 === 0 && a < 0) {
+          previewText.innerText = 'Cannot take even root of negative number';
+          msg.innerText = 'Cannot take even root of negative number';
+          return;
+        }
+      }
+      if (type === 'log_base') {
+        if (a <= 0) {
+          previewText.innerText = 'Logarithm argument must be positive';
+          msg.innerText = 'Logarithm argument (a) must be positive';
+          return;
+        }
+        if (b <= 0) {
+          previewText.innerText = 'Logarithm base must be positive';
+          msg.innerText = 'Logarithm base (b) must be positive';
+          return;
+        }
+        if (b === 1) {
+          previewText.innerText = 'Logarithm base cannot be 1';
+          msg.innerText = 'Logarithm base (b) cannot be 1';
+          return;
+        }
+      }
+
+      let res;
+      if (type === 'add') res = a + b;
+      else if (type === 'subtract') res = a - b;
+      else if (type === 'multiply') res = a * b;
+      else if (type === 'divide') res = a / b;
+      else if (type === 'power') res = Math.pow(a, b);
+      else if (type === 'modulus') res = a % b;
+      else if (type === 'percent_of') res = (a * b) / 100;
+      else if (type === 'nth_root') res = Math.pow(a, 1/b);
+      else if (type === 'log_base') res = Math.log(a) / Math.log(b);
+      else res = 'Unknown';
+
+      previewText.innerText = res;
+    }
+    [aEl, bEl, typeEl].forEach(el=>{
+      el.addEventListener('input', computePreview);
+      el.addEventListener('change', computePreview);
+    });
+
+    // ----------------- Load list + stats -----------------
     async function loadList() {
       tableBody.innerHTML = '';
       listMsg.innerText = '';
+
       try {
         const res = await fetch('/api/calculations', { headers: { ...authHeader(), 'Accept': 'application/json' } });
-        if (res.status === 401) { listMsg.innerText = 'Unauthorized - please set token (login or paste below)'; if (authCard) authCard.style.display = 'block'; return; }
-        const data = await res.json();
-        if (!Array.isArray(data)) { listMsg.innerText = 'No calculations found'; return; }
-        // store current data for export & client-side filtering
-        currentData = data;
-        // update quick stats
-        try{
-          document.getElementById('statTotal').innerText = data.length;
-          if (data.length > 0) {
-            const last = data[data.length - 1];
-            document.getElementById('statLast').innerText = last.result;
-            const types = data.map(c => c.type || '');
-            const mode = types.sort((a,b) => types.filter(v => v===a).length - types.filter(v => v===b).length).pop() || '-';
-            document.getElementById('statType').innerText = mode;
-          } else {
-            document.getElementById('statLast').innerText = '-';
-            document.getElementById('statType').innerText = '-';
-          }
-        }catch(e){}
 
-        data.forEach(c => {
+        if (res.status === 401) {
+          listMsg.innerText = 'Unauthorized - please login or set token.';
+          currentData = [];
+          updateStats();
+          return;
+        }
+
+        const data = await res.json();
+        if (!Array.isArray(data)) {
+          listMsg.innerText = 'No calculations found';
+          currentData = [];
+          updateStats();
+          return;
+        }
+
+        // keep a canonical, sorted copy
+        currentData = data.slice().sort((a, b) => a.id - b.id);
+
+        // render table from currentData
+        currentData.forEach(c => {
           const tr = document.createElement('tr');
           const typeClass = 'pill-' + (c.type || '').toLowerCase();
           const typeHtml = `<span class="pill ${typeClass}">${c.type}</span>`;
-          
+
           tr.innerHTML = `
             <td>${c.id}</td>
             <td>${c.a}</td>
@@ -325,205 +737,405 @@
             </td>`;
           tableBody.appendChild(tr);
         });
+
+        updateStats();
+        filterTable();   // keep any existing filters/search applied
+
       } catch (err) {
+        console.error(err);
         listMsg.innerText = 'Network error - check console';
+        currentData = [];
+        updateStats();
       }
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      msg.innerText = '';
-      const a = parseFloat(aEl.value);
-      const b = parseFloat(bEl.value);
-      const type = typeEl.value;
-      if (isNaN(a) || isNaN(b)) { msg.innerText = 'Operands must be numbers'; return; }
-      
-      const payload = { a, b, type };
-      const id = document.getElementById('calcId').value;
-      
-      try {
-        let res;
-        if (id) {
-          res = await fetch('/api/calculations/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: JSON.stringify(payload) });
-        } else {
-          res = await fetch('/api/calculations', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: JSON.stringify(payload) });
-        }
-        
-        if (res.status === 401) { msg.innerText = 'Unauthorized'; return; }
-        if (res.status >= 400) { const j = await res.json(); msg.innerText = j.detail || 'Error'; return; }
-        
-        const j = await res.json();
-        msg.innerText = '';
-        showToast(id ? 'Calculation updated' : 'Calculation created', 'success');
-        resetForm();
-        loadList();
-      } catch (err) { msg.innerText = 'Network error'; }
-    });
+    // ----------------- Stats (Total, Last Result, Top Type) -----------------
+    function updateStats() {
+      const data = currentData || [];
+      const statTotalEl = document.getElementById('statTotal');
+      const statLastEl  = document.getElementById('statLast');
+      const statTypeEl  = document.getElementById('statType');
 
-    tableBody.addEventListener('click', async (e) => {
-      if (e.target.classList.contains('edit')) {
-        const id = e.target.getAttribute('data-id');
-        const res = await fetch('/api/calculations/' + id, { headers: { ...authHeader() } });
-        if (res.status === 200) {
-          const c = await res.json();
-          document.getElementById('calcId').value = c.id;
-          aEl.value = c.a; bEl.value = c.b; typeEl.value = c.type;
-          submitBtn.innerText = 'Update'; cancelEdit.style.display = 'inline-block';
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+      statTotalEl.innerText = data.length;
+
+      if (!data.length) {
+        statLastEl.innerText = '-';
+        statTypeEl.innerText = '-';
+        return;
       }
-      if (e.target.classList.contains('del')) {
-        const delBtn = e.target;
-        const id = delBtn.getAttribute('data-id');
-        // if already in confirm mode (clicked Confirm), proceed
-        if (delBtn.dataset.confirm === '1'){
-          const res = await fetch('/api/calculations/' + id, { method: 'DELETE', headers: { ...authHeader() } });
-          if (res.status === 200) { showToast('Deleted', ''); loadList(); }
+
+      // Make sure newest is last (by id)
+      const sorted = [...data].sort((a, b) => a.id - b.id);
+      const last = sorted[sorted.length - 1];
+
+      statLastEl.innerText = last.result;
+      statTypeEl.innerText = last.type;   // Show the last operation type, not most frequent
+      
+      // Load detailed statistics
+      loadDetailedStats();
+    }
+
+    // ----------------- Detailed Statistics -----------------
+    async function loadDetailedStats() {
+      try {
+        const res = await fetch('/api/statistics/summary', { 
+          headers: { ...authHeader(), 'Accept': 'application/json' } 
+        });
+
+        if (!res.ok) {
+          console.error('Failed to load statistics');
           return;
         }
 
-        // Prevent multiple confirm wrappers
-        const actionCell = delBtn.parentNode;
-        if (!actionCell) return;
+        const stats = await res.json();
+        
+        // Update average stats
+        document.getElementById('statAvgA').innerText = stats.average_operand_a || '-';
+        document.getElementById('statAvgB').innerText = stats.average_operand_b || '-';
+        document.getElementById('statAvgResult').innerText = stats.average_result || '-';
+        document.getElementById('statMinResult').innerText = stats.min_result !== null ? stats.min_result : '-';
+        document.getElementById('statMaxResult').innerText = stats.max_result !== null ? stats.max_result : '-';
+        
+        // Operations breakdown with visual bars
+        const chartEl = document.getElementById('operationsChart');
+        chartEl.innerHTML = '';
+        
+        if (stats.operations_breakdown && Object.keys(stats.operations_breakdown).length > 0) {
+          const total = stats.total_calculations;
+          const breakdown = stats.operations_breakdown;
+          
+          // Sort by count descending
+          const sorted = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
+          
+          sorted.forEach(([opType, count]) => {
+            const percentage = ((count / total) * 100).toFixed(1);
+            const barWidth = percentage;
+            
+            const barContainer = document.createElement('div');
+            barContainer.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:0.85rem;';
+            
+            const label = document.createElement('div');
+            label.style.cssText = 'width:90px; text-align:right; color:#a1a1aa;';
+            label.innerText = opType;
+            
+            const barBg = document.createElement('div');
+            barBg.style.cssText = 'flex:1; background:#2a2a2a; border-radius:4px; height:20px; position:relative; overflow:hidden;';
+            
+            const barFill = document.createElement('div');
+            barFill.style.cssText = `width:${barWidth}%; background:linear-gradient(90deg, #a855f7, #6366f1); height:100%; border-radius:4px; transition:width 0.3s ease;`;
+            
+            const countLabel = document.createElement('div');
+            countLabel.style.cssText = 'width:60px; text-align:left; font-weight:600; color:#fff;';
+            countLabel.innerText = `${count} (${percentage}%)`;
+            
+            barBg.appendChild(barFill);
+            barContainer.appendChild(label);
+            barContainer.appendChild(barBg);
+            barContainer.appendChild(countLabel);
+            chartEl.appendChild(barContainer);
+          });
+        } else {
+          chartEl.innerHTML = '<div class="muted" style="text-align:center; padding:8px;">No data available</div>';
+        }
+        
+      } catch (err) {
+        console.error('Error loading detailed stats:', err);
+      }
+    }
 
-        // hide original edit button while confirming
-        const editBtn = actionCell.querySelector('.edit');
-        if (editBtn) editBtn.style.display = 'none';
+    // ----------------- Create / Update -----------------
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.innerText = '';
 
-        // change delete button to Confirm
-        delBtn.dataset.confirm = '1';
-        delBtn._origText = delBtn.innerText;
-        delBtn.innerText = 'Confirm';
-        delBtn.style.background = '#b91c1c';
+      const a = parseFloat(aEl.value);
+      const b = parseFloat(bEl.value);
+      const type = typeEl.value;
 
-        // create a Cancel button next to it
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'btn btn-secondary';
-        cancelBtn.style.marginLeft = '6px';
-        cancelBtn.style.padding = '6px 12px';
-        cancelBtn.innerText = 'Cancel';
-        actionCell.appendChild(cancelBtn);
+      if (isNaN(a) || isNaN(b)) { msg.innerText = 'Operands must be numbers'; return; }
+      if (type === 'divide' && b === 0) { msg.innerText = 'Division by 0 not allowed'; return; }
+      if (type === 'modulus' && b === 0) { msg.innerText = 'Modulus by 0 not allowed'; return; }
+      
+      if (type === 'nth_root') {
+        if (b <= 0) { msg.innerText = 'Root index (b) must be positive'; return; }
+        if (b % 2 === 0 && a < 0) { msg.innerText = 'Cannot take even root of negative number'; return; }
+      }
+      
+      if (type === 'log_base') {
+        if (a <= 0) { msg.innerText = 'Logarithm argument (a) must be positive'; return; }
+        if (b <= 0) { msg.innerText = 'Logarithm base (b) must be positive'; return; }
+        if (b === 1) { msg.innerText = 'Logarithm base (b) cannot be 1'; return; }
+      }
 
-        // handler to cancel confirm state
-        const clearConfirm = ()=>{
-          try{
-            delBtn.dataset.confirm = '0';
-            delBtn.innerText = delBtn._origText || 'Del';
-            delBtn.style.background = '';
-            if (editBtn) editBtn.style.display = '';
-            if (cancelBtn && cancelBtn.parentNode) cancelBtn.parentNode.removeChild(cancelBtn);
-          }catch(e){}
-        };
+      const payload = { a, b, type };
+      const id = document.getElementById('calcId').value;
 
-        cancelBtn.addEventListener('click', clearConfirm);
+      try {
+        const url = id ? '/api/calculations/' + id : '/api/calculations';
+        const method = id ? 'PUT' : 'POST';
 
-        // auto-revert after 4 seconds
-        const t = setTimeout(()=>{ clearConfirm(); }, 4000);
-        // if they click Confirm (delBtn) while in confirm state, we'll proceed above
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', ...authHeader() },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.status === 401) { msg.innerText = 'Unauthorized'; return; }
+        if (!res.ok) {
+          const j = await res.json().catch(()=>({}));
+          msg.innerText = j.detail || 'Error';
+          return;
+        }
+
+        showToast(id ? 'Calculation updated' : 'Calculation created', 'success');
+        resetForm();
+        loadList();
+
+      } catch (err) {
+        msg.innerText = 'Network error';
       }
     });
 
-    cancelEdit.addEventListener('click', () => resetForm());
-    function resetForm() { document.getElementById('calcId').value = ''; aEl.value=''; bEl.value=''; submitBtn.innerText='Create'; cancelEdit.style.display='none'; msg.innerText=''; }
+    // ----------------- Edit / Delete -----------------
+    tableBody.addEventListener('click', async (e) => {
+      const target = e.target;
 
-    function showToast(text, type){
-      const wrap = document.getElementById('toastWrap');
-      const el = document.createElement('div');
-      el.className = 'toast' + (type?(' '+type):'');
-      el.innerText = text;
-      wrap.appendChild(el);
-      setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(6px)'; setTimeout(()=>wrap.removeChild(el),300) }, 2600);
-    }
+      if (target.classList.contains('edit')) {
+        const id = target.getAttribute('data-id');
+        try{
+          const res = await fetch('/api/calculations/' + id, { headers: { ...authHeader() } });
+          if (res.ok) {
+            const c = await res.json();
+            document.getElementById('calcId').value = c.id;
+            aEl.value = c.a;
+            bEl.value = c.b;
+            typeEl.value = c.type;
+            submitBtn.innerText = 'Update';
+            cancelEdit.style.display = 'inline-block';
+            computePreview();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }catch(e){}
+      }
 
-    // Export JSON handler
-    const exportBtn = document.getElementById('exportBtn');
-    if (exportBtn) exportBtn.addEventListener('click', ()=>{
-      try{
-        const blob = new Blob([JSON.stringify(currentData || [], null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'calculations.json'; a.click(); URL.revokeObjectURL(url);
-        showToast('Export started', '');
-      }catch(e){ showToast('Export failed', ''); }
+      if (target.classList.contains('del')) {
+        const id = target.getAttribute('data-id');
+        if (!confirm('Delete this calculation?')) return;
+
+        try{
+          const res = await fetch('/api/calculations/' + id, { method:'DELETE', headers:{ ...authHeader() } });
+          if (res.ok) {
+            showToast('Deleted', '');
+            loadList();
+          }
+        }catch(e){
+          showToast('Delete failed', '');
+        }
+      }
     });
 
-    // Search & Filter logic
+    cancelEdit.addEventListener('click', resetForm);
+
+    function resetForm() {
+      document.getElementById('calcId').value = '';
+      aEl.value = '';
+      bEl.value = '';
+      submitBtn.innerText = 'Create';
+      cancelEdit.style.display = 'none';
+      msg.innerText = '';
+      computePreview();
+    }
+
+    // ----------------- Export -----------------
+    const exportBtn = document.getElementById('exportBtn');
+    const exportModal = document.getElementById('exportModal');
+    const closeExportModal = document.getElementById('closeExportModal');
+    const exportCSV = document.getElementById('exportCSV');
+    const exportJSON = document.getElementById('exportJSON');
+    const exportPDF = document.getElementById('exportPDF');
+
+    function downloadFile(filename, contents, type){
+      const blob = new Blob([contents], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Show export modal
+    exportBtn.addEventListener('click', () => {
+      exportModal.classList.add('active');
+    });
+
+    // Close modal
+    closeExportModal.addEventListener('click', () => {
+      exportModal.classList.remove('active');
+    });
+
+    // Close on overlay click
+    exportModal.addEventListener('click', (e) => {
+      if (e.target === exportModal) {
+        exportModal.classList.remove('active');
+      }
+    });
+
+    // CSV Export
+    exportCSV.addEventListener('click', () => {
+      try {
+        const data = currentData || [];
+        if (data.length === 0) {
+          showToast('No data to export', '');
+          exportModal.classList.remove('active');
+          return;
+        }
+
+        // CSV Header
+        let csv = 'ID,Operand A,Operation,Operand B,Result\n';
+        
+        // CSV Rows
+        data.forEach(calc => {
+          csv += `${calc.id},${calc.a},${calc.type},${calc.b},${calc.result}\n`;
+        });
+
+        downloadFile('calculations.csv', csv, 'text/csv');
+        showToast('CSV exported successfully', '');
+        exportModal.classList.remove('active');
+      } catch (e) {
+        showToast('CSV export failed', '');
+        console.error(e);
+      }
+    });
+
+    // JSON Export
+    exportJSON.addEventListener('click', () => {
+      try {
+        const data = currentData || [];
+        if (data.length === 0) {
+          showToast('No data to export', '');
+          exportModal.classList.remove('active');
+          return;
+        }
+
+        const jsonData = JSON.stringify(data, null, 2);
+        downloadFile('calculations.json', jsonData, 'application/json');
+        showToast('JSON exported successfully', '');
+        exportModal.classList.remove('active');
+      } catch (e) {
+        showToast('JSON export failed', '');
+        console.error(e);
+      }
+    });
+
+    // PDF Export
+    exportPDF.addEventListener('click', () => {
+      try {
+        const data = currentData || [];
+        if (data.length === 0) {
+          showToast('No data to export', '');
+          exportModal.classList.remove('active');
+          return;
+        }
+
+        // Create simple PDF-like content (HTML that can be printed as PDF)
+        let pdfContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Calculations Export</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h1 { color: #333; border-bottom: 3px solid #a855f7; padding-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th { background: #a855f7; color: white; padding: 12px; text-align: left; }
+    td { padding: 10px; border-bottom: 1px solid #ddd; }
+    tr:hover { background: #f5f5f5; }
+    .footer { margin-top: 30px; color: #666; font-size: 12px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>📊 Calculations Report</h1>
+  <p><strong>Total Calculations:</strong> ${data.length}</p>
+  <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Operand A</th>
+        <th>Operation</th>
+        <th>Operand B</th>
+        <th>Result</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+        data.forEach(calc => {
+          pdfContent += `
+      <tr>
+        <td>${calc.id}</td>
+        <td>${calc.a}</td>
+        <td>${calc.type}</td>
+        <td>${calc.b}</td>
+        <td><strong>${calc.result}</strong></td>
+      </tr>`;
+        });
+
+        pdfContent += `
+    </tbody>
+  </table>
+  
+  <div class="footer">
+    <p>FastAPI Calculator - Calculations Export</p>
+    <p>Print this page as PDF using your browser's print function (Ctrl+P / Cmd+P)</p>
+  </div>
+</body>
+</html>`;
+
+        // Open in new window for printing as PDF
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(pdfContent);
+        printWindow.document.close();
+        
+        // Auto-trigger print dialog after a short delay
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+
+        showToast('PDF preview opened - Use Print to save as PDF', '');
+        exportModal.classList.remove('active');
+      } catch (e) {
+        showToast('PDF export failed', '');
+        console.error(e);
+      }
+    });
+
+    // ----------------- Search & filter -----------------
     const searchInput = document.getElementById('searchInput');
     const filterType = document.getElementById('filterType');
+
     function filterTable(){
-      const term = (searchInput?.value || '').toLowerCase();
-      const type = (filterType?.value || 'all');
+      const term = (searchInput.value || '').toLowerCase();
+      const type = filterType.value || 'all';
       const rows = document.querySelectorAll('#calcTable tbody tr');
+
       rows.forEach(row=>{
         const id = (row.children[0].innerText || '').toLowerCase();
         const opType = (row.children[2].innerText || '').toLowerCase();
         const result = (row.children[4].innerText || '').toLowerCase();
+
         const matchesTerm = !term || id.includes(term) || result.includes(term);
         const matchesType = type === 'all' || opType.includes(type);
+
         row.style.display = (matchesTerm && matchesType) ? '' : 'none';
       });
     }
-    if (searchInput) searchInput.addEventListener('keyup', filterTable);
-    if (filterType) filterType.addEventListener('change', filterTable);
 
-    // If the user just logged in, show a dialog prompting to copy the token to clipboard
-    (function showTokenDialogIfNeeded(){
-      try{
-        if (localStorage.getItem('showTokenDialog') === '1'){
-          const t = localStorage.getItem(tokenKey);
-          localStorage.removeItem('showTokenDialog');
-          if (!t) return;
-          const overlay = document.createElement('div');
-          overlay.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:9999;backdrop-filter: blur(4px);';
-          const box = document.createElement('div');
-          box.style.cssText = 'background:#1f2937;color:#fff;padding:20px;border-radius:10px;max-width:720px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.6);';
-          box.innerHTML = `<h3 style="margin:0 0 10px 0">Copy your token</h3>
-            <p style="margin:0 0 12px 0;color:#cbd5e1">Your login token is stored locally. For some browsers/sites you may need to paste it into the token field on the calculations page. You can copy it now:</p>
-            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
-              <input id="_copyTokenInput" style="flex:1;padding:10px;border-radius:6px;border:1px solid #374151;background:#111;color:#fff;font-family:monospace" value="${t}" readonly />
-              <button id="_copyTokenBtn" style="background:#a855f7;color:#fff;border:none;padding:10px 12px;border-radius:8px;cursor:pointer">Copy</button>
-            </div>
-            <div style="text-align:right"><button id="_closeTokenBtn" style="background:#374151;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer">Close</button></div>`;
-          overlay.appendChild(box);
-          document.body.appendChild(overlay);
-          const copyBtn = document.getElementById('_copyTokenBtn');
-          const copyInput = document.getElementById('_copyTokenInput');
-          const closeBtn = document.getElementById('_closeTokenBtn');
-          copyBtn.addEventListener('click', async ()=>{
-            try{
-              await navigator.clipboard.writeText(copyInput.value);
-              showToast('Token copied to clipboard', 'success');
-            }catch(e){
-              // fallback
-              copyInput.select();
-              document.execCommand('copy');
-              showToast('Token copied (fallback)', 'success');
-            }
-          });
-          closeBtn.addEventListener('click', ()=>{ document.body.removeChild(overlay); });
-          // Auto-close the copy dialog after a reasonable interval so users can copy it,
-          // but tests won't be blocked. Keep it visible longer (6s) so it doesn't vanish
-          // immediately during manual use.
-          setTimeout(()=>{ try{ if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }catch(e){} }, 6000);
-        }
-      }catch(e){ }
-    })();
+    searchInput.addEventListener('keyup', filterTable);
+    filterType.addEventListener('change', filterTable);
 
-    // Logout button logic (visible on calculations page)
-    (function setupLogoutButton(){
-      try{
-        const logoutBtn = document.getElementById('logoutBtnCalc');
-        if (!logoutBtn) return;
-        function updateLogoutBtn(){ const t = localStorage.getItem(tokenKey); logoutBtn.style.display = t ? 'inline-block' : 'none'; }
-        updateLogoutBtn();
-        logoutBtn.addEventListener('click', ()=>{
-          localStorage.removeItem(tokenKey);
-          showToken();
-          showToast('Logged out', '');
-          setTimeout(()=> window.location.href = '/login', 700);
-        });
-      }catch(e){ }
-    })();
-
+    // ----------------- Init -----------------
+    showToken();
+    computePreview();
     loadList();
   </script>
 </body>

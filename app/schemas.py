@@ -15,6 +15,14 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6)
 
 
+class UserUpdate(BaseModel):
+    username: str = Field(None, min_length=3, max_length=50)
+    email: EmailStr = None
+
+class PasswordChange(BaseModel):
+    old_password: str = Field(..., min_length=6)
+    new_password: str = Field(..., min_length=6)
+
 class UserRead(BaseModel):
     id: int
     username: str

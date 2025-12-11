@@ -12,6 +12,7 @@ from app.operations import add, subtract, multiply, divide
 from app.logger_config import configure_logger
 from app.users import router as users_router
 from app.calculations import router as calculations_router
+from app.statistics import router as statistics_router
 from app.db import Base, engine
 
 logger = configure_logger()
@@ -24,6 +25,9 @@ app = FastAPI(
 
 # Serve simple frontend pages for Module 13
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(users_router, prefix="/api")
+app.include_router(calculations_router, prefix="/api")
+app.include_router(statistics_router, prefix="/api")
 
 
 def custom_openapi():

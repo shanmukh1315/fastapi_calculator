@@ -38,6 +38,11 @@ class CalculationType(str, Enum):
     SUBTRACT = "subtract"
     MULTIPLY = "multiply"
     DIVIDE = "divide"
+    POWER = "power"
+    MODULUS = "modulus"
+    PERCENT_OF = "percent_of"
+    NTH_ROOT = "nth_root"
+    LOG_BASE = "log_base"
 
 
 class Calculation(Base):

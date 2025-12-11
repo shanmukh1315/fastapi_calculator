@@ -6,6 +6,7 @@ playwright
 httpx
 psycopg2-binary
 sqlalchemy
+alembic
 passlib
 pydantic[email]
 python-jose[cryptography]

@@ -69,3 +69,50 @@ def client(db_session):
 
     # Clean up overrides after the test
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def auth_headers(client, db_session):
+    """
+    Create a test user and return authentication headers.
+    """
+    from app.models import User
+    from app.security import hash_password
+    import time
+    
+    # Create unique test user
+    username = f"testuser_{int(time.time() * 1000000)}"
+    email = f"{username}@test.com"
+    
+    user = User(
+        username=username,
+        email=email,
+        password_hash=hash_password("testpass123")
+    )
+    db_session.add(user)
+    db_session.commit()
+    
+    # Login to get token
+    response = client.post("/api/auth/login", json={
+        "username": username,
+        "password": "testpass123"
+    })
+    
+    if response.status_code == 200:
+        token = response.json()["access_token"]
+        return {"Authorization": f"Bearer {token}"}
+    
+    # If /api/auth/login doesn't exist, try /login
+    response = client.post("/login", json={
+        "username": username,
+        "password": "testpass123"
+    })
+    
+    if response.status_code == 200:
+        token = response.json()["access_token"]
+        return {"Authorization": f"Bearer {token}"}
+    
+    # Fallback: create token manually
+    from app.security import create_access_token
+    token = create_access_token(data={"sub": username})
+    return {"Authorization": f"Bearer {token}"}

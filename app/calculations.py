@@ -50,7 +50,10 @@ def browse_calculations(current_user: User = Depends(get_current_user), db: Sess
 def add_calculation(payload: CalculationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Compute result using factory
     operation = CalculationFactory.get_operation(payload.type)
-    result = operation.compute(payload.a, payload.b)
+    try:
+        result = operation.compute(payload.a, payload.b)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     db_calc = Calculation(a=payload.a, b=payload.b, type=payload.type, result=result, user_id=current_user.id)
     db.add(db_calc)
@@ -82,7 +85,10 @@ def update_calculation(calc_id: int, payload: CalculationCreate, db: Session = D
     calc.type = payload.type
     # Recompute
     operation = CalculationFactory.get_operation(payload.type)
-    calc.result = operation.compute(payload.a, payload.b)
+    try:
+        calc.result = operation.compute(payload.a, payload.b)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     db.add(calc)
     db.commit()
