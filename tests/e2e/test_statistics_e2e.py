@@ -16,19 +16,20 @@ class TestStatisticsUI:
         password = "testpass123"
         
         # Register
-        page.goto("http://localhost:8000/static/register.html")
-        page.fill("#username", username)
-        page.fill("#email", email)
-        page.fill("#password", password)
-        page.click("#registerBtn")
-        page.wait_for_timeout(1000)
+        page.goto("http://localhost:8000/register")
+        page.fill('input[name="username"]', username)
+        page.fill('input[name="email"]', email)
+        page.fill('input[name="password"]', password)
+        page.fill('input[name="confirm"]', password)
+        page.click('button[type="submit"]')
+        page.wait_for_load_state("networkidle")
         
-        # Login
-        page.goto("http://localhost:8000/static/login.html")
-        page.fill("#username", username)
-        page.fill("#password", password)
-        page.click("#loginBtn")
-        page.wait_for_timeout(1000)
+        # Login (if redirected to login page)
+        if "/login" in page.url:
+            page.fill('input[name="username"]', username)
+            page.fill('input[name="password"]', password)
+            page.click('button[type="submit"]')
+            page.wait_for_load_state("networkidle")
         
         # Get token from localStorage
         token = page.evaluate("() => localStorage.getItem('token')")
