@@ -29,7 +29,8 @@ def test_bread_calculations_flow():
         page.fill('#username', username)
         page.fill('#password', password)
         page.click("button[type=submit]")
-        page.wait_for_selector('.success', timeout=3000)
+        # Wait for token to be stored in localStorage
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
 
         # open calculations page
         page.goto(f"{BASE}/calculations")

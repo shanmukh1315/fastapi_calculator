@@ -38,6 +38,9 @@ def register_and_login(page: Page, base_url: str, credentials: dict):
         page.fill('input[name="password"]', credentials["password"])
         page.click('button[type="submit"]')
         page.wait_for_load_state("networkidle")
+    
+    # Wait for token to be stored in localStorage
+    page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
 
 
 @pytest.mark.e2e

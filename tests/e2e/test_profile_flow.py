@@ -40,6 +40,9 @@ class TestCompleteProfileFlow:
         page.fill('input[name="password"]', test_user_data["password"])
         page.click('button[type="submit"]')
         
+        # Wait for token to be stored
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
+        
         # Wait for redirect to calculations
         page.wait_for_url("**/calculations")
         
@@ -84,6 +87,7 @@ class TestCompleteProfileFlow:
         page.fill('input[name="username"]', test_user_data["username"])
         page.fill('input[name="password"]', test_user_data["password"])
         page.click('button[type="submit"]')
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
         page.wait_for_url("**/calculations")
         
         # 2. Navigate to profile
@@ -111,6 +115,7 @@ class TestCompleteProfileFlow:
         page.fill('input[name="username"]', test_user_data["username"])
         page.fill('input[name="password"]', 'newe2epass456')
         page.click('button[type="submit"]')
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
         
         # Should successfully login
         page.wait_for_url("**/calculations")
@@ -146,6 +151,7 @@ class TestCompleteProfileFlow:
         page.fill('input[name="username"]', user_data["username"])
         page.fill('input[name="password"]', user_data["password"])
         page.click('button[type="submit"]')
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
         page.wait_for_url("**/calculations")
         
         # 3. Create a calculation
@@ -183,6 +189,7 @@ class TestCompleteProfileFlow:
         page.fill('input[name="username"]', 'fullflowupdated')
         page.fill('input[name="password"]', 'newfullflowpass456')
         page.click('button[type="submit"]')
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
         page.wait_for_url("**/calculations")
         
         # 7. Verify calculation history persists
@@ -218,6 +225,7 @@ class TestProfileErrorHandling:
         page.fill('input[name="username"]', 'user2')
         page.fill('input[name="password"]', 'pass123')
         page.click('button[type="submit"]')
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
         page.wait_for_url("**/calculations")
         
         # Try to update to user1's username
@@ -246,6 +254,7 @@ class TestProfileErrorHandling:
         page.fill('input[name="username"]', 'wrongpassuser')
         page.fill('input[name="password"]', 'correctpass123')
         page.click('button[type="submit"]')
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
         page.wait_for_url("**/calculations")
         
         # Navigate to profile
@@ -279,6 +288,7 @@ class TestProfileUIValidation:
         page.fill('input[name="username"]', 'validuser')
         page.fill('input[name="password"]', 'pass123')
         page.click('button[type="submit"]')
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
         page.wait_for_url("**/calculations")
         
         # Navigate to profile
@@ -307,6 +317,7 @@ class TestProfileUIValidation:
         page.fill('input[name="username"]', 'passvaliduser')
         page.fill('input[name="password"]', 'pass123')
         page.click('button[type="submit"]')
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
         page.wait_for_url("**/calculations")
         
         # Navigate to profile

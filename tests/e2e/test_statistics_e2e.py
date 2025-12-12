@@ -31,6 +31,9 @@ class TestStatisticsUI:
             page.click('button[type="submit"]')
             page.wait_for_load_state("networkidle")
         
+        # Wait for token to be stored in localStorage
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
+        
         # Get token from localStorage
         token = page.evaluate("() => localStorage.getItem('token')")
         return token

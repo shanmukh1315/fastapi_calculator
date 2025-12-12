@@ -31,7 +31,8 @@ def test_register_and_login_positive():
         page.fill('#username', username)
         page.fill('#password', password)
         page.click("button[type=submit]")
-        page.wait_for_selector('.success', timeout=3000)
+        # Wait for token to be stored in localStorage
+        page.wait_for_function("() => localStorage.getItem('token') !== null", timeout=5000)
         # token stored in localStorage
         token = page.evaluate("() => localStorage.getItem('token')")
         assert token and len(token) > 10
