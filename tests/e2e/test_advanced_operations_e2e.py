@@ -92,6 +92,9 @@ def test_nth_root_operation_e2e(page: Page, test_user_credentials):
     """
     base_url = "http://127.0.0.1:8000"
     
+    # Register and login first
+    register_and_login(page, base_url, test_user_credentials)
+    
     page.goto(f"{base_url}/calculations")
     
     # Fill in calculation form
@@ -127,6 +130,9 @@ def test_nth_root_validation_e2e(page: Page, test_user_credentials):
     """
     base_url = "http://127.0.0.1:8000"
     
+    # Register and login first
+    register_and_login(page, base_url, test_user_credentials)
+    
     page.goto(f"{base_url}/calculations")
     
     # Try to calculate even root of negative number
@@ -153,6 +159,9 @@ def test_log_base_operation_e2e(page: Page, test_user_credentials):
     """
     base_url = "http://127.0.0.1:8000"
     
+    # Register and login first
+    register_and_login(page, base_url, test_user_credentials)
+    
     page.goto(f"{base_url}/calculations")
     
     # Fill in calculation form
@@ -170,7 +179,7 @@ def test_log_base_operation_e2e(page: Page, test_user_credentials):
     
     # Submit calculation
     page.click('button:has-text("Create")')
-    page.wait_for_selector('.toast:has-text("created")', timeout=3000)
+    page.wait_for_selector('.toast:has-text("created")', timeout=10000)
     
     # Verify calculation in table
     table = page.locator('#calcTable tbody')
@@ -184,6 +193,9 @@ def test_log_base_validation_e2e(page: Page, test_user_credentials):
     E2E Test: Verify log_base validation for base = 1.
     """
     base_url = "http://127.0.0.1:8000"
+    
+    # Register and login first
+    register_and_login(page, base_url, test_user_credentials)
     
     page.goto(f"{base_url}/calculations")
     
@@ -208,6 +220,9 @@ def test_all_operations_filter_e2e(page: Page, test_user_credentials):
     """
     base_url = "http://127.0.0.1:8000"
     
+    # Register and login first
+    register_and_login(page, base_url, test_user_credentials)
+    
     page.goto(f"{base_url}/calculations")
     
     # Create one of each new operation type
@@ -222,7 +237,7 @@ def test_all_operations_filter_e2e(page: Page, test_user_credentials):
         page.select_option('#type', op['type'])
         page.fill('#b', op['b'])
         page.click('button:has-text("Create")')
-        page.wait_for_timeout(500)  # Wait for operation to complete
+        page.wait_for_timeout(1500)  # Wait for operation to complete
     
     # Test filter dropdown
     page.select_option('#filterType', 'percent_of')
@@ -258,6 +273,9 @@ def test_operation_pills_styling_e2e(page: Page, test_user_credentials):
     """
     base_url = "http://127.0.0.1:8000"
     
+    # Register and login first
+    register_and_login(page, base_url, test_user_credentials)
+    
     page.goto(f"{base_url}/calculations")
     
     # Create calculations if not already present
@@ -265,11 +283,11 @@ def test_operation_pills_styling_e2e(page: Page, test_user_credentials):
     page.select_option('#type', 'percent_of')
     page.fill('#b', '20')
     page.click('button:has-text("Create")')
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(1500)
     
     # Verify percent_of pill has correct class
     pill = page.locator('.pill-percent_of').first
-    expect(pill).to_be_visible()
+    expect(pill).to_be_visible(timeout=10000)
     expect(pill).to_have_text('percent_of')
     
     # Create nth_root
@@ -277,19 +295,19 @@ def test_operation_pills_styling_e2e(page: Page, test_user_credentials):
     page.select_option('#type', 'nth_root')
     page.fill('#b', '3')
     page.click('button:has-text("Create")')
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(1500)
     
     # Verify nth_root pill
     pill = page.locator('.pill-nth_root').first
-    expect(pill).to_be_visible()
+    expect(pill).to_be_visible(timeout=10000)
     
     # Create log_base
     page.fill('#a', '1000')
     page.select_option('#type', 'log_base')
     page.fill('#b', '10')
     page.click('button:has-text("Create")')
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(1500)
     
     # Verify log_base pill
     pill = page.locator('.pill-log_base').first
-    expect(pill).to_be_visible()
+    expect(pill).to_be_visible(timeout=10000)

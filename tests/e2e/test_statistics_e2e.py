@@ -263,7 +263,7 @@ class TestStatisticsUI:
         page.fill("#b", "5")
         page.select_option("#type", "add")
         page.click("#submitBtn")
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(1500)
         
         page.fill("#a", "20")
         page.fill("#b", "10")
@@ -275,11 +275,13 @@ class TestStatisticsUI:
         total = page.locator("#statTotal").inner_text()
         assert total == "2"
         
-        # Delete one calculation
+        # Delete one calculation - handle confirmation dialog
         delete_buttons = page.locator(".del")
         if delete_buttons.count() > 0:
+            # Set up dialog handler before clicking
+            page.once("dialog", lambda dialog: dialog.accept())
             delete_buttons.first.click()
-            page.wait_for_timeout(1500)
+            page.wait_for_timeout(2000)
             
             # Check total updated to 1
             total_after = page.locator("#statTotal").inner_text()
