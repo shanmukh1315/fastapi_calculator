@@ -63,16 +63,16 @@
     <h1>Register</h1>
     <form id="registerForm" novalidate>
     <label>Email
-      <input id="email" type="email" required />
+      <input id="email" name="email" type="email" required />
     </label>
     <label>Username
-      <input id="username" type="text" minlength="3" required />
+      <input id="username" name="username" type="text" minlength="3" required />
     </label>
     <label>Password
-      <input id="password" type="password" minlength="6" required />
+      <input id="password" name="password" type="password" minlength="6" required />
     </label>
     <label>Confirm Password
-      <input id="confirm" type="password" minlength="6" required />
+      <input id="confirm" name="confirm" type="password" minlength="6" required />
     </label>
       <div id="msg" class="msg" role="alert"></div>
       <button class="btn btn-primary" type="submit">Register</button>
