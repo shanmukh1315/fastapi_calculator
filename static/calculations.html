@@ -890,6 +890,7 @@
         showToast(id ? 'Calculation updated' : 'Calculation created', 'success');
         resetForm();
         loadList();
+        loadDetailedStats();
 
       } catch (err) {
         msg.innerText = 'Network error';
@@ -927,6 +928,7 @@
           if (res.ok) {
             showToast('Deleted', '');
             loadList();
+            loadDetailedStats();
           }
         }catch(e){
           showToast('Delete failed', '');
