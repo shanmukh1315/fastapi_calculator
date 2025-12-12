@@ -76,7 +76,7 @@ class TestCompleteProfileFlow:
         page.click('button:has-text("Update Profile")')
         
         # Wait for success message
-        expect(page.locator('.toast')).to_be_visible(timeout=10000)
+        expect(page.locator('#profileMsg')).to_contain_text('updated', timeout=10000)
         
         # 6. Verify changes in UI
         page.goto("http://127.0.0.1:8000/calculations")
@@ -127,10 +127,11 @@ class TestCompleteProfileFlow:
         # 3. Change password
         page.fill('input#oldPassword', password)
         page.fill('input#newPassword', 'newe2epass456')
+        page.fill('input#confirmNewPassword', 'newe2epass456')
         page.click('button:has-text("Change Password")')
         
         # Wait for success
-        expect(page.locator('.toast')).to_be_visible(timeout=10000)
+        expect(page.locator('#passwordMsg')).to_contain_text('changed', timeout=10000)
         
         # 4. Logout
         page.goto("http://127.0.0.1:8000/calculations")
@@ -208,13 +209,14 @@ class TestCompleteProfileFlow:
         page.fill('input#username', new_username)
         page.fill('input#email', new_email)
         page.click('button:has-text("Update Profile")')
-        expect(page.locator('.toast')).to_be_visible(timeout=10000)
+        expect(page.locator('#profileMsg')).to_contain_text('updated', timeout=10000)
         
         # 5. Change password
         page.fill('input#oldPassword', password)
         page.fill('input#newPassword', 'newfullflowpass456')
+        page.fill('input#confirmNewPassword', 'newfullflowpass456')
         page.click('button:has-text("Change Password")')
-        expect(page.locator('.toast')).to_be_visible(timeout=10000)
+        expect(page.locator('#passwordMsg')).to_contain_text('changed', timeout=10000)
         
         # 6. Logout
         page.goto("http://127.0.0.1:8000/calculations")
@@ -247,7 +249,7 @@ class TestProfileErrorHandling:
         """Test that updating to duplicate username shows error."""
         import time
         # Create two users via UI
-        timestamp = str(int(time.time() * 1000))
+        timestamp = str(int(time.time() * 1000000))
         user1 = f"dupuser1_{timestamp}"
         user2 = f"dupuser2_{timestamp}"
         
@@ -292,15 +294,16 @@ class TestProfileErrorHandling:
         page.fill('input#username', user1)
         page.click('button:has-text("Update Profile")')
         
-        # Should show error
-        expect(page.locator('.toast, .msg')).to_contain_text('already taken', timeout=10000)
+        # Should show error - username already exists
+        expect(page.locator('#profileMsg')).to_be_visible(timeout=10000)
+        expect(page.locator('#profileMsg')).to_contain_text('already taken', timeout=10000)
     
     @pytest.mark.e2e
     def test_password_change_wrong_old_password(self, page: Page):
         """Test that wrong old password shows error."""
         import time
         # Register user via UI
-        timestamp = str(int(time.time() * 1000))
+        timestamp = str(int(time.time() * 1000000))
         username = f"wrongpass_{timestamp}"
         email = f"{username}@test.com"
         password = "correctpass123"
@@ -333,7 +336,7 @@ class TestProfileErrorHandling:
         page.click('button:has-text("Change Password")')
         
         # Should show error
-        expect(page.locator('.toast, .msg')).to_contain_text('incorrect', timeout=10000)
+        expect(page.locator('#passwordMsg')).to_be_visible(timeout=10000)
 
 
 class TestProfileUIValidation:

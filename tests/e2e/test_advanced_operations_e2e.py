@@ -7,11 +7,11 @@ import pytest
 from playwright.sync_api import Page, expect
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def test_user_credentials():
     """Provide test user credentials."""
     import time
-    username = f"e2e_user_{int(time.time())}"
+    username = f"e2e_user_{int(time.time() * 1000000)}"  # Use microseconds for uniqueness
     return {
         "username": username,
         "email": f"{username}@test.com",
@@ -263,7 +263,8 @@ def test_all_operations_filter_e2e(page: Page, test_user_credentials):
     # Show all
     page.select_option('#filterType', 'all')
     visible_rows = page.locator('#calcTable tbody tr:visible')
-    expect(visible_rows.count()).to_be_greater_than(2)
+    # Check that multiple rows are visible (at least 3)
+    assert visible_rows.count() > 2
 
 
 @pytest.mark.e2e

@@ -6,7 +6,7 @@ BASE = "http://127.0.0.1:8000"
 
 @pytest.mark.skipif(False, reason="Run in CI where server is started")
 def test_register_and_login_positive(page: Page):
-    ts = str(int(time.time()))
+    ts = str(int(time.time() * 1000000))
     email = f"user{ts}@example.com"
     username = f"user{ts}"
     password = "secret123"
@@ -49,7 +49,7 @@ def test_register_short_password_shows_error(page: Page):
 def test_login_wrong_password_shows_invalid_credentials(page: Page):
     # Attempt to login with an existing username but wrong password.
     # We'll create a user via direct API call to ensure it exists.
-    ts = str(int(time.time()))
+    ts = str(int(time.time() * 1000000))
     username = f"user{ts}"
     email = f"user{ts}@example.com"
     password = "secret123"

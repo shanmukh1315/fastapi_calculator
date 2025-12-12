@@ -6,7 +6,7 @@ BASE = "http://127.0.0.1:8000"
 
 @pytest.mark.skipif(False, reason="Run in CI where server is started")
 def test_bread_calculations_flow(page: Page):
-    ts = str(int(time.time()))
+    ts = str(int(time.time() * 1000000))
     email = f"calc{ts}@example.com"
     username = f"calc{ts}"
     password = "secret123"
