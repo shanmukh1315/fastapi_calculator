@@ -16,7 +16,7 @@ class TestStatisticsUI:
         password = "testpass123"
         
         # Register
-        page.goto("http://localhost:8000/register")
+        page.goto("http://127.0.0.1:8000/register")
         page.fill('input[name="username"]', username)
         page.fill('input[name="email"]', email)
         page.fill('input[name="password"]', password)
@@ -39,7 +39,7 @@ class TestStatisticsUI:
         """Test that statistics show zeros when no calculations exist."""
         token = self.register_and_login(page)
         
-        page.goto("http://localhost:8000/static/calculations.html")
+        page.goto("http://127.0.0.1:8000/calculations")
         page.wait_for_timeout(1500)
         
         # Check basic stats
@@ -56,7 +56,7 @@ class TestStatisticsUI:
         """Test that statistics update immediately after creating a calculation."""
         token = self.register_and_login(page)
         
-        page.goto("http://localhost:8000/static/calculations.html")
+        page.goto("http://127.0.0.1:8000/calculations")
         page.wait_for_timeout(1000)
         
         # Create a calculation
@@ -82,7 +82,7 @@ class TestStatisticsUI:
         """Test that detailed statistics section is visible and populated."""
         token = self.register_and_login(page)
         
-        page.goto("http://localhost:8000/static/calculations.html")
+        page.goto("http://127.0.0.1:8000/calculations")
         page.wait_for_timeout(1000)
         
         # Create multiple calculations
@@ -119,7 +119,7 @@ class TestStatisticsUI:
         """Test that operations breakdown shows visual bars."""
         token = self.register_and_login(page)
         
-        page.goto("http://localhost:8000/static/calculations.html")
+        page.goto("http://127.0.0.1:8000/calculations")
         page.wait_for_timeout(1000)
         
         # Create calculations of different types
@@ -152,7 +152,7 @@ class TestStatisticsUI:
         """Test that min and max results are displayed correctly."""
         token = self.register_and_login(page)
         
-        page.goto("http://localhost:8000/static/calculations.html")
+        page.goto("http://127.0.0.1:8000/calculations")
         page.wait_for_timeout(1000)
         
         # Create calculations with varying results
@@ -186,7 +186,7 @@ class TestStatisticsUI:
         """Test that statistics are loaded correctly after page reload."""
         token = self.register_and_login(page)
         
-        page.goto("http://localhost:8000/static/calculations.html")
+        page.goto("http://127.0.0.1:8000/calculations")
         page.wait_for_timeout(1000)
         
         # Create a calculation
@@ -216,7 +216,7 @@ class TestStatisticsUI:
         """Test that advanced operations appear in statistics breakdown."""
         token = self.register_and_login(page)
         
-        page.goto("http://localhost:8000/static/calculations.html")
+        page.goto("http://127.0.0.1:8000/calculations")
         page.wait_for_timeout(1000)
         
         # Create percent_of calculation
@@ -252,7 +252,7 @@ class TestStatisticsUI:
         """Test that statistics update when a calculation is deleted."""
         token = self.register_and_login(page)
         
-        page.goto("http://localhost:8000/static/calculations.html")
+        page.goto("http://127.0.0.1:8000/calculations")
         page.wait_for_timeout(1000)
         
         # Create two calculations
