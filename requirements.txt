@@ -2,6 +2,7 @@ fastapi
 uvicorn
 pytest
 pytest-cov
+pytest-asyncio
 playwright
 pytest-playwright
 httpx
