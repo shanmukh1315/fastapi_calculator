@@ -26,6 +26,7 @@ def register_and_login(page: Page, base_url: str, credentials: dict):
     page.fill('input[name="username"]', credentials["username"])
     page.fill('input[name="email"]', credentials["email"])
     page.fill('input[name="password"]', credentials["password"])
+    page.fill('input[name="confirm"]', credentials["password"])
     page.click('button[type="submit"]')
     
     # Wait for redirect to login or calculations
