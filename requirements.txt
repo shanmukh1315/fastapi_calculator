@@ -3,6 +3,7 @@ uvicorn
 pytest
 pytest-cov
 playwright
+pytest-playwright
 httpx
 psycopg2-binary
 sqlalchemy
