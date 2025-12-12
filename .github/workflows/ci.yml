@@ -83,7 +83,6 @@ jobs:
       # -------- START APP AND RUN PLAYWRIGHT E2E --------
       - name: Run E2E tests
         env:
-          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
           DATABASE_URL: postgresql://user:password@localhost:5432/test_db
           TEST_DATABASE_URL: postgresql://user:password@localhost:5432/test_db
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
@@ -108,8 +107,8 @@ jobs:
             exit 1
           fi
 
-          # Now run ONLY the E2E tests with explicit pytest-playwright plugin
-          pytest -p pytest_playwright tests/e2e -vv
+          # Now run ONLY the E2E tests
+          pytest tests/e2e -vv
 
       # -------- DOCKER BUILD & PUSH --------
       - name: Log in to Docker Hub
